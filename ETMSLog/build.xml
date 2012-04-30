@@ -1,0 +1,88 @@
+<project name="MyProjectETMS" default="dist" basedir=".">
+	<description>
+		simple example build file
+    </description>
+	<!-- set global properties for this build -->
+	<property name="src" location="src" />
+	<property name="build" location="build" />
+	<property name="dist" location="dist" />
+	<property name="lib" location="lib" />
+	<path id="classpath">
+
+        <fileset  dir="${lib}" >
+        <include name="**/*.jar"/>
+		</fileset>
+ 	</path>
+
+	
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}" />
+		<mkdir dir="${dist}" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}" encoding="ISO-8859-1">
+			<classpath>
+			<pathelement location="lib/httpclient-4.1.jar"/>
+			<pathelement location="lib/httpclient-cache-4.1.jar"/>
+			<pathelement location="lib/httpcore-4.1.jar"/>
+			
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="dist" depends="clean,compile" description="generate the distribution">
+		<!-- Create the distribution directory -->
+		
+
+		<!--
+			Put everything in ${build} into the MyProject-${DSTAMP}.jar file
+		-->
+		<pathconvert property="mf.classpath" pathsep=";">
+
+             <path refid="classpath" />
+
+             <flattenmapper />
+
+         </pathconvert>
+         <echo file="${dist}/run.bat" >java -classpath .;${mf.classpath};ETMS-${DSTAMP}.jar org.chencc98.etmslog.main.Main
+pause
+         </echo>
+
+		
+		<jar destfile="${dist}/ETMS-${DSTAMP}.jar" >
+		<fileset dir="${build}">
+
+                <include name="**/*.class"/>
+
+            </fileset>
+<!--         <fileset dir="${lib}">
+        	<include name="**/*.*" />
+        </fileset>
+-->
+<!-- 		<manifest>
+			<attribute name="Class-Path" value="${mf.classpath}"/>
+
+		</manifest>
+ -->
+		
+		
+		</jar>
+		<copy todir="${dist}" >
+			<fileset dir="${lib}" />
+		</copy>
+	</target>
+
+	<target name="clean" description="clean up">
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}" />
+		<delete dir="${dist}" />
+		
+		
+	</target>
+</project>

@@ -1,0 +1,447 @@
+/**
+ * 
+ */
+package org.chencc98.etmslog.main;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Vector;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+
+//http://jwebunit.sourceforge.net/quickstart.html
+
+
+/**
+ * @author chencarl
+ *
+ */
+public class Main {
+	private DefaultHttpClient httpclient = null;
+	private UserProperty pro = null;
+	private Vector<DoctorProperty> vall = null;
+	private Vector<DoctorProperty> vused = null;
+	private boolean isdebug = false;
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		//#1 login first
+		Main m = new Main();
+		m.login();
+		//#2 insert event log and verify
+		
+		
+		
+//		Date dt = new Date();
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.DAY_OF_YEAR, -1);
+		Date dt = c.getTime();
+		
+		
+		
+//		m.InsertEvent(dt);
+		try{
+			m.verifyEvent(dt);
+		}catch(ETMSException e){
+			m.InsertEvent(dt);
+			try{
+				m.verifyEvent(dt);
+			}catch(ETMSException e1){
+				System.err.println("Error: something is wrong "+e1.getMessage());
+				m.shutdownConnection();
+				System.exit(1);
+			}
+		}
+		
+		Hashtable<String, String> ht = m.getTotalDone(dt);
+//		if( m.getIsdebug() ){
+		System.out.println("Before Add visit log:");
+			Enumeration<String> e = ht.keys();
+			while( e.hasMoreElements()){
+				String key = e.nextElement();
+				System.out.println("Total at "+key+" is "+ht.get(key));
+			}
+//		}
+		
+		//#3 add visit log 
+		int i=1;
+		for( i=1; i<=5 ; i++ ){
+			Date curdt = ETMSUtil.getDateByDiff(ETMSUtil.getDateFirst2(dt), i);
+			String value = ht.get(ETMSUtil.getDateFormat(curdt));
+			if( value == null ){ value = "0" ; }
+			int value2 = Integer.parseInt(value);
+			if( value2 >= 12 ){
+				System.out.println("Total at "+ETMSUtil.getDateFormat(curdt)+ " is "+value2+" , so skip...");
+				continue;
+			}
+			if( curdt.after(dt) ){
+				System.out.println("work date "+ETMSUtil.getDateFormat(curdt)+ " is after current date "+ETMSUtil.getDateFormat(dt)+" , so skip...");
+				continue;
+			}
+			int doctor_num = ETMSUtil.getRandom15_20();
+			Vector<DoctorProperty> vtoday = new Vector<DoctorProperty>(doctor_num);
+			DoctorHandler.pickupDoctor(m, vtoday, doctor_num);
+			if( m.getIsdebug()) {
+				System.out.println(curdt.toString()+":"+vtoday.toString());
+			}
+			int j = 0;
+			for( j=0; j<doctor_num ; j++ ){
+//				if( i == 1 && j == 0){
+					m.addVisitLog(vtoday.get(j), curdt);
+//				}
+			}
+			System.out.println("Working at "+ETMSUtil.getDateFormat(curdt)+" is done. it should be "+doctor_num);
+		}
+		
+		Hashtable<String, String> ht2 = m.getTotalDone(dt);
+		System.out.println("After Add visit log:");
+			Enumeration<String> e2 = ht2.keys();
+			while( e2.hasMoreElements()){
+				String key = e2.nextElement();
+				System.out.println("Total at "+key+" is "+ht2.get(key));
+			}
+		
+		
+		m.logout();
+		m.shutdownConnection();
+	}
+	
+	public Main(){
+		httpclient = new DefaultHttpClient();
+		pro = new UserProperty();
+		vall = new Vector<DoctorProperty>();
+		vused = new Vector<DoctorProperty>();
+		DoctorHandler.fillAllDoctors(vall);
+		String temp = System.getProperty("DEBUG","false");
+		if( temp.equals("0") || temp.equals("false") ){
+			isdebug = false;
+		}else{
+			isdebug = true;
+		}
+	}
+	public Vector<DoctorProperty> getVall(){
+		return vall;
+	}
+	public Vector<DoctorProperty> getVused(){
+		return vused;
+	}
+	public boolean getIsdebug(){
+		return isdebug;
+	}
+	
+	public void shutdownConnection(){
+		httpclient.getConnectionManager().shutdown();
+	}
+	
+	public void login(){
+		try {
+            HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Login.asp");
+
+            //System.out.println("executing request " + httpget.getURI());
+
+            // Create a response handler
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            int index = responseBody.indexOf("TestValid.asp");
+            String code = responseBody.substring(index+19, index+19+4);
+            if( this.isdebug ){
+            	System.out.println("Login Debug info:");
+            	System.out.println(responseBody);
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("code="+code);
+            System.out.println("----------------------------------------");
+            
+            HttpPost httpost = new HttpPost("https://www.etms1.astrazeneca.cn/login.asp");
+            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+            nvps.add(new BasicNameValuePair("multi_lan", "chn"));
+            nvps.add(new BasicNameValuePair("usr_code", pro.getUsername()));
+            nvps.add(new BasicNameValuePair("usr_passwd", pro.getPassword()));
+            nvps.add(new BasicNameValuePair("valid_code", code));
+            nvps.add(new BasicNameValuePair("retry_num", "0"));
+            httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.ASCII));
+            HttpResponse response = httpclient.execute(httpost);
+            HttpEntity entity = response.getEntity();
+            EntityUtils.consume(entity);
+            if( this.isdebug ) {System.out.println("Post logon cookies:");}
+            List<Cookie> cookies = httpclient.getCookieStore().getCookies();
+            if (cookies.isEmpty()) {
+//                System.out.println("None");
+                throw new ETMSException("Login failed. no cookie");
+            } else {
+                for (int i = 0; i < cookies.size(); i++) {
+                    if( this.isdebug ){System.out.println("- " + cookies.get(i).toString());}
+                }
+                if( cookies.size() != 2 ){
+//                	throw new ETMSException("Login failed. cookie number is "+cookies.size());
+                }
+            }
+
+        } catch (Exception e) {
+			System.err.println("error happen when try to login");
+			if( this.isdebug) { e.printStackTrace();}
+			httpclient.getConnectionManager().shutdown();
+			System.exit(1);
+		} 
+        
+        System.out.println("Info: Login Successfully");
+	}
+	
+	public void logout(){
+		try {
+            HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/logout.asp");
+
+            //System.out.println("executing request " + httpget.getURI());
+
+            // Create a response handler
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+             httpclient.execute(httpget, responseHandler);
+            
+//            System.out.println("----------------------------------------");
+//            System.out.println(responseBody);
+//            System.out.println("----------------------------------------");
+            
+           
+            
+
+        } catch (Exception e) {
+			System.err.println("error happen when try to logout");
+			if( this.isdebug ){e.printStackTrace();}
+			httpclient.getConnectionManager().shutdown();
+			System.exit(1);
+		} 
+        
+        System.out.println("Info: Logout Successfully");
+	}
+
+	public void InsertEvent(java.util.Date dt){
+		try{
+//			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/EventEditDialog-body.asp?usr_code="+pro.getUsername()+"&start_date="+ETMSUtil.getDateFormat());
+//			ResponseHandler<String> responseHandler = new BasicResponseHandler();
+//            String responseBody = httpclient.execute(httpget, responseHandler);
+//            System.out.println("----------------------------------------");
+//            System.out.println(responseBody);
+//            System.out.println("----------------------------------------");
+			HttpPost httpost = new HttpPost("https://www.etms1.astrazeneca.cn/Call/WeeklyEvent-Updt.asp");
+            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+            nvps.add(new BasicNameValuePair("start_date", ETMSUtil.getDateFirst(dt)));
+            nvps.add(new BasicNameValuePair("usr_code", pro.getUsername()));
+            nvps.add(new BasicNameValuePair("events", pro.getDefaultEvents()));
+//            System.out.println(pro.getDefaultEvents());
+            nvps.add(new BasicNameValuePair("flag", "0"));
+            httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.ASCII));
+            HttpResponse response = httpclient.execute(httpost);
+            HttpEntity entity = response.getEntity();
+            EntityUtils.consume(entity);
+//            entity.writeTo(System.out);
+			
+		}catch(Exception e){
+			System.err.println("error happen when try to insert event");
+			if( this.isdebug) {e.printStackTrace();}
+			httpclient.getConnectionManager().shutdown();
+			System.exit(1);
+		}
+	}
+	
+	public void verifyEvent(Date dt)throws ETMSException{
+		try{
+			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/EventEditDialog-body.asp?usr_code="+pro.getUsername()+"&start_date="+ETMSUtil.getDateFirst(dt));
+			ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            if( this.isdebug ){
+            	System.out.println("VerifyEvent Debug info:");
+            	System.out.println(responseBody);
+            }
+            System.out.println("----------------------------------------");
+//            System.out.println(responseBody);
+            EventProperty[] eps = ETMSUtil.getEventLists(responseBody, dt);
+            int empty_found = 0;
+            for( int i=1; i<=7; i++ ){
+            	System.out.println("Date:"+eps[i-1].getDate()+"\tAM:"+eps[i-1].getAMEvt()+"\tPM:"+eps[i-1].getPMEvt());
+            	if( eps[i-1].getAMEvt().equals("") || eps[i-1].getPMEvt().equals("")){
+            		empty_found++;
+            	}
+            }
+            
+            System.out.println("----------------------------------------");
+            if( empty_found != 0){
+            	throw new ETMSException("Verify error, some Event is empty");
+            }
+		}catch(ETMSException e){
+			throw e;
+		}
+		catch(Exception e){
+			System.err.println("error happen when try to verify event");
+			if( this.isdebug ){e.printStackTrace();}
+			httpclient.getConnectionManager().shutdown();
+			System.exit(1);
+		}
+		System.out.println("Event verified successfully");
+	}
+
+	public void addVisitLog(DoctorProperty doc, Date dt){
+		if( this.isdebug ){
+			System.out.println("Info: Add doc visit "+doc+" at "+dt);
+		}
+		try{
+			// below code is the first click
+			 HttpPost httpost = new HttpPost("https://www.etms1.astrazeneca.cn/Call/CPDocAction-updt.asp");
+	            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+	            nvps.add(new BasicNameValuePair("cur_date", ETMSUtil.getDateFirst(dt)));
+	            nvps.add(new BasicNameValuePair("m_Date", ETMSUtil.getDateFirst(dt)));
+	            nvps.add(new BasicNameValuePair("half", "0"));
+	            nvps.add(new BasicNameValuePair("sysdate", ETMSUtil.getDateFormat(new Date())));
+	            nvps.add(new BasicNameValuePair("frmAsp", "bulk"));
+	            nvps.add(new BasicNameValuePair("txtBtnKind", "rbAllDoc"));
+	            nvps.add(new BasicNameValuePair("updt_cnt", "1"));
+	            nvps.add(new BasicNameValuePair("arg", "&c_"+doc.getHospital()+"_"+doc.getDoctorID()+"_"+doc.getDept()+"_"+ETMSUtil.getDateFormat(dt)+"=add"));
+	            nvps.add(new BasicNameValuePair("mr_code", pro.getUsername()));
+	            nvps.add(new BasicNameValuePair("mr_name", pro.getFullname()));
+	            
+	           
+	            httpost.setEntity(new UrlEncodedFormEntity(nvps, HTTP.ISO_8859_1));
+	            HttpResponse response = httpclient.execute(httpost);
+	            HttpEntity entity = response.getEntity();
+	            EntityUtils.consume(entity);
+			
+			
+//			return;
+			
+			//get the necessary info and open inout dialg
+			
+			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocDetailModal.asp?call_date="+ETMSUtil.getDateFormat(dt)+"&ins_code="+doc.getHospital()+"&doc_code="+doc.getDoctorID()+"&usr_code="+pro.getUsername()+"&frmASP=bulk");
+//			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocDetailModal.asp?call_date="+ETMSUtil.getDateFormat(dt)+"&ins_code=ZJHZ036H&doc_code=ZJHZ036114&usr_code="+pro.getUsername()+"&frmASP=bulk");
+
+            
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            String system_id = ETMSUtil.searchSystem_id(responseBody);
+            String call_code = ETMSUtil.searchCall_code(responseBody);
+            String type = ETMSUtil.searchType(responseBody);
+            if( this.isdebug ){
+				System.out.println("-----------------");
+				// System.out.println(responseBody);
+				System.out.println("system_id=" + system_id);
+				System.out.println("call_code=" + call_code);
+				System.out.println("type=" + type);
+				System.out.println("-----------------");
+            }
+            
+            HttpGet httpget2 = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocDetail-input.asp?usr_code="+pro.getUsername()+"&call_date="+ETMSUtil.getDateFormat(dt)+"&ins_code="+doc.getHospital()+"&doc_code="+doc.getDoctorID()+
+            		"&system_id="+system_id+"&call_code="+call_code+"&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname()+"&frmAsp=bulk&type="+type);
+//            HttpGet httpget2 = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocDetail-input.asp?usr_code="+pro.getUsername()+"&call_date="+ETMSUtil.getDateFormat(dt)+"&ins_code=ZJHZ036Hdoc_code=ZJHZ036114&system_id="+system_id+"&call_code="+call_code+"&mr_code="+pro.getUsername()+"&frmAsp=bulk&type="+type);
+
+            
+            ResponseHandler<String> responseHandler2 = new BasicResponseHandler();
+            String responseBody2 = httpclient.execute(httpget2, responseHandler2);
+            
+//            System.out.println("-----------------");
+            if( this.isdebug ) {
+            	System.out.println(responseBody2);
+            }
+            String time_stamp = ETMSUtil.searchTimestamp(responseBody2);
+            if( time_stamp.equals("") ){
+            	System.err.println("Error: can't get timestamp for this doctor "+ doc.getDoctorID());
+            	return;
+            }
+//            
+//            System.out.println("-----------------");
+//            
+            
+
+            //start to post to add this visit
+            HttpPost httpost2 = new HttpPost("https://www.etms1.astrazeneca.cn/Call/CPDocDetail-Updt.asp");
+//            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+            nvps.clear();
+//            List <NameValuePair> nvps = new ArrayList <NameValuePair>();
+            nvps.add(new BasicNameValuePair("system_id", system_id));
+            nvps.add(new BasicNameValuePair("time_stamp", time_stamp));
+            nvps.add(new BasicNameValuePair("usr_code", pro.getUsername()));
+            nvps.add(new BasicNameValuePair("login_usr_code", pro.getUsername()));
+            nvps.add(new BasicNameValuePair("call_code", call_code));
+            String call_type_code = "11";
+            Date nowdt = new Date();
+            if( nowdt.before(dt) ){
+            	call_type_code = "02";
+            }
+            nvps.add(new BasicNameValuePair("call_type_code", call_type_code));
+            nvps.add(new BasicNameValuePair("doc_code", String.format("%-15s",doc.getDoctorID())));
+            nvps.add(new BasicNameValuePair("ins_code", String.format("%-10s",doc.getHospital())));
+//            nvps.add(new BasicNameValuePair("doc_code","ZJHZ036114" ));
+//            nvps.add(new BasicNameValuePair("ins_code", "ZJHZ036H"));
+            nvps.add(new BasicNameValuePair("call_date", ETMSUtil.getDateFormat2(dt)));
+            String start = ETMSUtil.getStartTime();
+            nvps.add(new BasicNameValuePair("start_time", start));
+            nvps.add(new BasicNameValuePair("end_time", ETMSUtil.getEndTime(start)));
+            nvps.add(new BasicNameValuePair("call_sub_type_code", "D"));
+            nvps.add(new BasicNameValuePair("prod_code1", "RE09"));
+            nvps.add(new BasicNameValuePair("det_msg1", ETMSUtil.getMsg()));
+            nvps.add(new BasicNameValuePair("feedback1", "01"));
+            nvps.add(new BasicNameValuePair("btnUpdt", "±£´æ°Ý·Ã"));
+            
+           
+            httpost2.setEntity(new UrlEncodedFormEntity(nvps, HTTP.ISO_8859_1));
+            HttpResponse response2 = httpclient.execute(httpost2);
+            HttpEntity entity2 = response2.getEntity();
+            EntityUtils.consume(entity2);
+            
+            
+		}catch (Exception e) {
+			System.err.println("error happen when try to add visit log");
+			if( this.isdebug ){
+				e.printStackTrace();
+			}
+			httpclient.getConnectionManager().shutdown();
+			System.exit(1);
+		} 
+//		System.out.println("Info: Add doc visit successfully");
+	}
+	
+	
+	public Hashtable<String, String> getTotalDone(Date dt){
+		Hashtable<String, String> ht = new Hashtable<String, String>();
+		try{
+			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocAction-body.asp?half=0&txtBtnKind=rbAllDoc&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname());
+//			
+
+            
+            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+            String responseBody = httpclient.execute(httpget, responseHandler);
+            if( this.isdebug ){
+            	System.out.println("GetTotalDone Debug info:");
+            	System.out.println(responseBody);
+            }
+            
+            int i;
+            for(i =0; i<7; i++ ){
+            	Date curdt = ETMSUtil.getDateByDiff(ETMSUtil.getDateFirst2(dt), i);
+            	ht.put(ETMSUtil.getDateFormat(curdt), ETMSUtil.searchTotal(responseBody, curdt));
+            }
+            
+		}catch(Exception e){
+			System.err.println("error happen when try to get total done");
+			if( this.isdebug) { e.printStackTrace();}
+//			httpclient.getConnectionManager().shutdown();
+//			System.exit(1);
+		}
+		return ht;
+	}
+}
