@@ -9,5 +9,9 @@ public class ETMSException extends Exception {
 	public ETMSException(String msg){
 		super(msg);
 	}
+	
+	public ETMSException( String msg, Throwable cause){
+		super(msg, cause);
+	}
 
 }

@@ -3,6 +3,8 @@ package org.chencc98.etmslog.main;
 import java.util.Random;
 import java.util.Vector;
 
+import org.chencc98.etmslog.entity.DoctorProperty;
+
 public class DoctorHandler {
 
 	/**

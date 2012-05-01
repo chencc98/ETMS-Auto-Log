@@ -1,4 +1,6 @@
-package org.chencc98.etmslog.main;
+package org.chencc98.etmslog.entity;
+
+import org.chencc98.etmslog.utils.ETMSUtil;
 
 public class EventProperty {
 	private String date= null;

@@ -1,4 +1,4 @@
-package org.chencc98.etmslog.main;
+package org.chencc98.etmslog.entity;
 
 public class DoctorProperty {
 	private String hospital_id = "";

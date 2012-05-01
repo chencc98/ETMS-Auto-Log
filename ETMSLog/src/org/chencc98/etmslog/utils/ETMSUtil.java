@@ -1,13 +1,15 @@
 /**
  * 
  */
-package org.chencc98.etmslog.main;
+package org.chencc98.etmslog.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Random;
+
+import org.chencc98.etmslog.entity.EventProperty;
 
 /**
  * @author chencarl

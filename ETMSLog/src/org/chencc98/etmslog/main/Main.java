@@ -24,6 +24,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.chencc98.etmslog.entity.DoctorProperty;
+import org.chencc98.etmslog.entity.EventProperty;
+import org.chencc98.etmslog.entity.UserProperty;
+import org.chencc98.etmslog.utils.Constants;
+import org.chencc98.etmslog.utils.ETMSUtil;
 
 //http://jwebunit.sourceforge.net/quickstart.html
 
@@ -46,13 +51,17 @@ public class Main {
 		//#1 login first
 		Main m = new Main();
 		m.login();
+		
+		
 		//#2 insert event log and verify
 		
 		
 		
 //		Date dt = new Date();
+		//default we will handle current day. but sometimes, we will handle another day
+		int today = 0;
 		Calendar c = Calendar.getInstance();
-		c.add(Calendar.DAY_OF_YEAR, -1);
+		c.add(Calendar.DAY_OF_YEAR, today);
 		Date dt = c.getTime();
 		
 		
@@ -67,9 +76,11 @@ public class Main {
 			}catch(ETMSException e1){
 				System.err.println("Error: something is wrong "+e1.getMessage());
 				m.shutdownConnection();
-				System.exit(1);
+				throw new ETMSRuntimeException(e1.getMessage(), e1);
 			}
 		}
+		
+		
 		
 		Hashtable<String, String> ht = m.getTotalDone(dt);
 //		if( m.getIsdebug() ){
@@ -129,7 +140,7 @@ public class Main {
 		pro = new UserProperty();
 		vall = new Vector<DoctorProperty>();
 		vused = new Vector<DoctorProperty>();
-		DoctorHandler.fillAllDoctors(vall);
+		//DoctorHandler.fillAllDoctors(vall); //after login, run this. we will load all doctors dynamically
 		String temp = System.getProperty("DEBUG","false");
 		if( temp.equals("0") || temp.equals("false") ){
 			isdebug = false;
@@ -153,7 +164,7 @@ public class Main {
 	
 	public void login(){
 		try {
-            HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Login.asp");
+            HttpGet httpget = new HttpGet(Constants.ETMS_BASE_URL + Constants.ETMS_LOGIN_PAGE);
 
             //System.out.println("executing request " + httpget.getURI());
 
@@ -170,7 +181,7 @@ public class Main {
             System.out.println("code="+code);
             System.out.println("----------------------------------------");
             
-            HttpPost httpost = new HttpPost("https://www.etms1.astrazeneca.cn/login.asp");
+            HttpPost httpost = new HttpPost(Constants.ETMS_BASE_URL + Constants.ETMS_LOGIN_PAGE);
             List <NameValuePair> nvps = new ArrayList <NameValuePair>();
             nvps.add(new BasicNameValuePair("multi_lan", "chn"));
             nvps.add(new BasicNameValuePair("usr_code", pro.getUsername()));
@@ -199,7 +210,9 @@ public class Main {
 			System.err.println("error happen when try to login");
 			if( this.isdebug) { e.printStackTrace();}
 			httpclient.getConnectionManager().shutdown();
-			System.exit(1);
+			//System.exit(1);
+			
+			throw new ETMSRuntimeException(e.getMessage(), e);
 		} 
         
         System.out.println("Info: Login Successfully");
@@ -240,7 +253,7 @@ public class Main {
 //            System.out.println("----------------------------------------");
 //            System.out.println(responseBody);
 //            System.out.println("----------------------------------------");
-			HttpPost httpost = new HttpPost("https://www.etms1.astrazeneca.cn/Call/WeeklyEvent-Updt.asp");
+			HttpPost httpost = new HttpPost(Constants.ETMS_BASE_URL + Constants.ETMS_EVENTINSERT_PAGE);
             List <NameValuePair> nvps = new ArrayList <NameValuePair>();
             nvps.add(new BasicNameValuePair("start_date", ETMSUtil.getDateFirst(dt)));
             nvps.add(new BasicNameValuePair("usr_code", pro.getUsername()));
@@ -257,13 +270,16 @@ public class Main {
 			System.err.println("error happen when try to insert event");
 			if( this.isdebug) {e.printStackTrace();}
 			httpclient.getConnectionManager().shutdown();
-			System.exit(1);
+			//System.exit(1);
+			
+			throw new ETMSRuntimeException( e.getMessage(), e);
 		}
 	}
 	
 	public void verifyEvent(Date dt)throws ETMSException{
 		try{
-			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/EventEditDialog-body.asp?usr_code="+pro.getUsername()+"&start_date="+ETMSUtil.getDateFirst(dt));
+			HttpGet httpget = new HttpGet(Constants.ETMS_BASE_URL + Constants.ETMS_EVENTEDIT_PAGE 
+					+ "?usr_code="+pro.getUsername()+"&start_date="+ETMSUtil.getDateFirst(dt));
 			ResponseHandler<String> responseHandler = new BasicResponseHandler();
             String responseBody = httpclient.execute(httpget, responseHandler);
             if( this.isdebug ){
@@ -292,7 +308,9 @@ public class Main {
 			System.err.println("error happen when try to verify event");
 			if( this.isdebug ){e.printStackTrace();}
 			httpclient.getConnectionManager().shutdown();
-			System.exit(1);
+			//System.exit(1);
+			
+			throw new ETMSRuntimeException(e.getMessage(), e);
 		}
 		System.out.println("Event verified successfully");
 	}
