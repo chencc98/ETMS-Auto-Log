@@ -7,14 +7,26 @@ public class DoctorProperty {
 	private String level = "";
 	private int lelve_num = 0;
 	private int access_num = 0;
-	public DoctorProperty(String hos, String dep,String id, String level, int num){
+	public DoctorProperty(String hos, String dep,String id, String level){
 		this.hospital_id = hos;
 		this.dept_id = dep;
 		this.doctor_id = id;
 		this.level = level;
-		this.lelve_num = num;
-		this.access_num = num;
+		if( this.level.equals("A")){
+			this.lelve_num = 4;
+		}else if( this.level.equals("B")){
+			this.lelve_num = 2;
+		}else{
+			this.lelve_num = 1;
+		}
+//		this.lelve_num = num;
+		this.access_num = 0;
 	}
+	public DoctorProperty(String hos, String dep,String id, String level, int access){
+		this(hos, dep, id, level);
+		this.access_num = access;
+	}
+	
 	public String getHospital(){
 		return this.hospital_id;
 	}
@@ -50,14 +62,14 @@ public class DoctorProperty {
 		this.access_num = a;
 	}
 	
-	public void accessit(){
+	public void accessit(){  //don't use
 		this.access_num--;
 	}
-	public void resetAccess(){
+	public void resetAccess(){  //don't use
 		this.access_num = this.lelve_num;
 	}
 	public String toString(){
-		return "HID:"+this.hospital_id+"|PID:"+this.dept_id+"|DID:"+this.doctor_id+"|LV:"+this.level+"|LN:"+String.valueOf(this.lelve_num);
+		return "HID:"+this.hospital_id+"|PID:"+this.dept_id+"|DID:"+this.doctor_id+"|LV:"+this.level+"|AS:"+this.access_num;
 	}
 	
 	public boolean equals(Object obj){

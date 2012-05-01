@@ -3,11 +3,13 @@
  */
 package org.chencc98.etmslog.main;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
@@ -27,8 +29,14 @@ import org.apache.http.util.EntityUtils;
 import org.chencc98.etmslog.entity.DoctorProperty;
 import org.chencc98.etmslog.entity.EventProperty;
 import org.chencc98.etmslog.entity.UserProperty;
+import org.chencc98.etmslog.myxml.MyErrorHandler;
 import org.chencc98.etmslog.utils.Constants;
 import org.chencc98.etmslog.utils.ETMSUtil;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.UncheckedJDOMFactory;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.input.sax.XMLReaders;
 
 //http://jwebunit.sourceforge.net/quickstart.html
 
@@ -43,6 +51,8 @@ public class Main {
 	private Vector<DoctorProperty> vall = null;
 	private Vector<DoctorProperty> vused = null;
 	private boolean isdebug = false;
+	
+	private Document xmldoc;
 
 	/**
 	 * @param args
@@ -59,7 +69,7 @@ public class Main {
 		
 //		Date dt = new Date();
 		//default we will handle current day. but sometimes, we will handle another day
-		int today = 0;
+		int today = -4;
 		Calendar c = Calendar.getInstance();
 		c.add(Calendar.DAY_OF_YEAR, today);
 		Date dt = c.getTime();
@@ -82,21 +92,28 @@ public class Main {
 		
 		
 		
-		Hashtable<String, String> ht = m.getTotalDone(dt);
+		 m.getTotalDone(dt);    //get the doctor info and put into vall
+		 
+		 
 //		if( m.getIsdebug() ){
 		System.out.println("Before Add visit log:");
-			Enumeration<String> e = ht.keys();
-			while( e.hasMoreElements()){
-				String key = e.nextElement();
-				System.out.println("Total at "+key+" is "+ht.get(key));
-			}
+		Vector<DoctorProperty> v = m.getVall();
+		Iterator<DoctorProperty> it = v.iterator();
+		while( it.hasNext()){
+			System.out.println(it.next().toString());
+		}
+//			Enumeration<String> e = ht.keys();
+//			while( e.hasMoreElements()){
+//				String key = e.nextElement();
+//				System.out.println("Total at "+key+" is "+ht.get(key));
+//			}
 //		}
-		
+		if( ! m.isdebug) return;		
 		//#3 add visit log 
 		int i=1;
 		for( i=1; i<=5 ; i++ ){
 			Date curdt = ETMSUtil.getDateByDiff(ETMSUtil.getDateFirst2(dt), i);
-			String value = ht.get(ETMSUtil.getDateFormat(curdt));
+			String value = "" ; //.get(ETMSUtil.getDateFormat(curdt));
 			if( value == null ){ value = "0" ; }
 			int value2 = Integer.parseInt(value);
 			if( value2 >= 12 ){
@@ -122,14 +139,7 @@ public class Main {
 			System.out.println("Working at "+ETMSUtil.getDateFormat(curdt)+" is done. it should be "+doctor_num);
 		}
 		
-		Hashtable<String, String> ht2 = m.getTotalDone(dt);
-		System.out.println("After Add visit log:");
-			Enumeration<String> e2 = ht2.keys();
-			while( e2.hasMoreElements()){
-				String key = e2.nextElement();
-				System.out.println("Total at "+key+" is "+ht2.get(key));
-			}
-		
+
 		
 		m.logout();
 		m.shutdownConnection();
@@ -434,32 +444,113 @@ public class Main {
 	}
 	
 	
-	public Hashtable<String, String> getTotalDone(Date dt){
+	public void getTotalDone(Date dt){
 		Hashtable<String, String> ht = new Hashtable<String, String>();
 		try{
-			HttpGet httpget = new HttpGet("https://www.etms1.astrazeneca.cn/Call/CPDocAction-body.asp?half=0&txtBtnKind=rbAllDoc&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname());
+			HttpGet httpget = new HttpGet( Constants.ETMS_BASE_URL + Constants.ETMS_DOCTOR_LOG_PAGE
+					+"?half=0&txtBtnKind=rbAllDoc&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname()
+					+"&cur_date="+ ETMSUtil.getDateFormat(dt) + "&m_Date="+ ETMSUtil.getDateFormat(dt));
 //			
-
+			System.out.println(httpget.getParams().toString());
             
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
             String responseBody = httpclient.execute(httpget, responseHandler);
-            if( this.isdebug ){
+            if( this.isdebug ){ 
             	System.out.println("GetTotalDone Debug info:");
             	System.out.println(responseBody);
             }
+           
             
-            int i;
-            for(i =0; i<7; i++ ){
-            	Date curdt = ETMSUtil.getDateByDiff(ETMSUtil.getDateFirst2(dt), i);
-            	ht.put(ETMSUtil.getDateFormat(curdt), ETMSUtil.searchTotal(responseBody, curdt));
+            //remove unused string before <html>
+            int i = responseBody.indexOf("<html>");
+            if( i >= 0 ){
+            	responseBody = responseBody.substring(i);
             }
+            
+            
+            int i1 = responseBody.indexOf("<head>");
+            int i2 = responseBody.indexOf("</head>", i1);
+            responseBody = responseBody.substring(0, i1) + responseBody.substring(i2 + 7);  //remove first link
+            while(( i1=responseBody.indexOf("<colgroup>") ) >=0 ){
+            	i2 = responseBody.indexOf("</colgroup>", i1);
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i2 + 11); 
+            }
+            while(( i1=responseBody.indexOf("<input ") ) >=0 ){
+            	i2 = responseBody.indexOf(">", i1);
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i2 + 1); 
+            }
+            while(( i1=responseBody.indexOf("<label ") ) >=0 ){
+            	i2 = responseBody.indexOf("</label>", i1);
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i2 + 8); 
+            }
+            while(( i1=responseBody.indexOf("<br>") ) >=0 ){
+            	
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i1 + 4); 
+            }
+            while(( i1=responseBody.indexOf("nowrap") ) >=0 ){
+            	
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i1 + 6); 
+            }
+            while(( i1=responseBody.indexOf("value=") ) >=0 ){
+            	i2 = responseBody.indexOf(">", i1);
+            	responseBody = responseBody.substring(0, i1) + responseBody.substring(i2 ); 
+            }
+            while(( i1=responseBody.indexOf("id=total") ) >=0 ){
+            	i2 = responseBody.indexOf(">", i1);
+            	responseBody = responseBody.substring(0, i1) + " id=\"" + responseBody.substring(i1 +3 , i2)
+            			+ "\" " + responseBody.substring(i2 ); 
+            }
+            
+            
+            System.out.println(responseBody);
+            
+            SAXBuilder sbuild = new SAXBuilder(null,null, new UncheckedJDOMFactory());
+            sbuild.setExpandEntities(false);
+            sbuild.setXMLReaderFactory(XMLReaders.NONVALIDATING);
+            //sbuild.setErrorHandler(new MyErrorHandler());
+            xmldoc = sbuild.build(new StringReader( responseBody));
+            
+            Element root = xmldoc.getRootElement();   //root element <html>
+            List<Element> divlist = root.getChild("body").getChildren("div");   //the div list
+            Element wantedDiv = null;
+            for( Element e : divlist ){
+            	if( "callactionbody_area".equals(e.getAttributeValue("id"))){
+            		wantedDiv = e;
+            		break;
+            	}
+            }
+            if( wantedDiv == null ){
+            	throw new ETMSException("body div can't found");
+            }
+            
+            List<Element> trlist = wantedDiv.getChild("table").getChild("tbody").getChildren("tr");
+            //above is the doctor tr list, start to parse
+            for( Element tr : trlist ){
+            	List<Element> tdlist = tr.getChildren("td");
+            	String level = tdlist.get(3).getText();          //level, A B C V
+            	String access = tdlist.get(5).getText();          //visit number, 3 or 4
+            	String line = tdlist.get(6).getAttributeValue("id");  //c_ZJHZ036H_ZJHZ036137_D007_2012/04/22
+            	String [] token = line.split("_");
+            	String hospital_id = token[1];
+            	String doctor_id = token[2];
+            	String depart_id = token[3];
+            	DoctorProperty dp = new DoctorProperty(hospital_id, depart_id, doctor_id,
+            			level, Integer.parseInt(access));
+            	vall.add(dp);
+            	
+            }
+            
+            
+           
             
 		}catch(Exception e){
 			System.err.println("error happen when try to get total done");
 			if( this.isdebug) { e.printStackTrace();}
 //			httpclient.getConnectionManager().shutdown();
 //			System.exit(1);
+			
+			throw new ETMSRuntimeException(e.getMessage(), e);
 		}
-		return ht;
+		
 	}
 }
