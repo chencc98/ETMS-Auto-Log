@@ -7,6 +7,7 @@ public class DoctorProperty {
 	private String level = "";
 	private int lelve_num = 0;
 	private int access_num = 0;
+	private boolean ispicked = false;
 	public DoctorProperty(String hos, String dep,String id, String level){
 		this.hospital_id = hos;
 		this.dept_id = dep;
@@ -68,14 +69,26 @@ public class DoctorProperty {
 	public void resetAccess(){  //don't use
 		this.access_num = this.lelve_num;
 	}
+	
+	public boolean getIspicked(){
+		return this.ispicked;
+	}
+	public void setIspicked(boolean p){
+		this.ispicked = p;
+	}
+	
+	public String getComparator(){
+		return "HID:"+this.hospital_id+"|PID:"+this.dept_id+"|DID:"+this.doctor_id;
+	}
 	public String toString(){
-		return "HID:"+this.hospital_id+"|PID:"+this.dept_id+"|DID:"+this.doctor_id+"|LV:"+this.level+"|AS:"+this.access_num;
+		return "HID:"+this.hospital_id+"|PID:"+this.dept_id+"|DID:"+this.doctor_id+"|LV:"+this.level+"|AS:"+this.access_num
+				+"|PICK:"+this.ispicked;
 	}
 	
 	public boolean equals(Object obj){
 		if( obj instanceof DoctorProperty ){
 			DoctorProperty dp = (DoctorProperty)obj;
-			if( this.toString().equals(dp.toString())){
+			if( this.getComparator().equals(dp.getComparator())){
 				return true;
 			}
 		}

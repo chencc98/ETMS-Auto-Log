@@ -7,10 +7,9 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 import org.apache.http.HttpEntity;
@@ -29,7 +28,6 @@ import org.apache.http.util.EntityUtils;
 import org.chencc98.etmslog.entity.DoctorProperty;
 import org.chencc98.etmslog.entity.EventProperty;
 import org.chencc98.etmslog.entity.UserProperty;
-import org.chencc98.etmslog.myxml.MyErrorHandler;
 import org.chencc98.etmslog.utils.Constants;
 import org.chencc98.etmslog.utils.ETMSUtil;
 import org.jdom2.Document;
@@ -69,7 +67,7 @@ public class Main {
 		
 //		Date dt = new Date();
 		//default we will handle current day. but sometimes, we will handle another day
-		int today = -4;
+		int today = 0;  //only handle current day.
 		Calendar c = Calendar.getInstance();
 		c.add(Calendar.DAY_OF_YEAR, today);
 		Date dt = c.getTime();
@@ -96,7 +94,7 @@ public class Main {
 		 
 		 
 //		if( m.getIsdebug() ){
-		System.out.println("Before Add visit log:");
+		System.out.println("Below is the doctor list:");
 		Vector<DoctorProperty> v = m.getVall();
 		Iterator<DoctorProperty> it = v.iterator();
 		while( it.hasNext()){
@@ -108,37 +106,39 @@ public class Main {
 //				System.out.println("Total at "+key+" is "+ht.get(key));
 //			}
 //		}
-		if( ! m.isdebug) return;		
+				
 		//#3 add visit log 
-		int i=1;
-		for( i=1; i<=5 ; i++ ){
-			Date curdt = ETMSUtil.getDateByDiff(ETMSUtil.getDateFirst2(dt), i);
-			String value = "" ; //.get(ETMSUtil.getDateFormat(curdt));
-			if( value == null ){ value = "0" ; }
-			int value2 = Integer.parseInt(value);
-			if( value2 >= 12 ){
-				System.out.println("Total at "+ETMSUtil.getDateFormat(curdt)+ " is "+value2+" , so skip...");
-				continue;
-			}
-			if( curdt.after(dt) ){
-				System.out.println("work date "+ETMSUtil.getDateFormat(curdt)+ " is after current date "+ETMSUtil.getDateFormat(dt)+" , so skip...");
-				continue;
-			}
-			int doctor_num = ETMSUtil.getRandom15_20();
-			Vector<DoctorProperty> vtoday = new Vector<DoctorProperty>(doctor_num);
-			DoctorHandler.pickupDoctor(m, vtoday, doctor_num);
-			if( m.getIsdebug()) {
-				System.out.println(curdt.toString()+":"+vtoday.toString());
-			}
-			int j = 0;
-			for( j=0; j<doctor_num ; j++ ){
-//				if( i == 1 && j == 0){
-					m.addVisitLog(vtoday.get(j), curdt);
-//				}
-			}
-			System.out.println("Working at "+ETMSUtil.getDateFormat(curdt)+" is done. it should be "+doctor_num);
+		
+		m.pickup(dt);
+		System.out.println("Picked doctor list:");
+		v = m.getVused();
+		 it = v.iterator();
+		while( it.hasNext()){
+			System.out.println(it.next().toString());
 		}
 		
+		
+		
+		
+			for( DoctorProperty cdp : v ){
+//				if( i == 1 && j == 0){
+					m.addVisitLog(cdp, dt);
+//				}
+			}
+			
+		m.getVall().clear();
+		m.getTotalDone(dt);
+		System.out.println("result:");
+		it = v.iterator();
+		while( it.hasNext() ){
+			DoctorProperty dp = it.next();
+			for( DoctorProperty used : m.getVall() ){
+				if( used.equals(dp)){
+					System.out.println(dp.toString());
+					break;
+				}
+			}
+		}
 
 		
 		m.logout();
@@ -434,9 +434,9 @@ public class Main {
             
 		}catch (Exception e) {
 			System.err.println("error happen when try to add visit log");
-			if( this.isdebug ){
+//			if( this.isdebug ){
 				e.printStackTrace();
-			}
+//			}
 			httpclient.getConnectionManager().shutdown();
 			System.exit(1);
 		} 
@@ -445,13 +445,14 @@ public class Main {
 	
 	
 	public void getTotalDone(Date dt){
-		Hashtable<String, String> ht = new Hashtable<String, String>();
+//		Hashtable<String, String> ht = new Hashtable<String, String>();
 		try{
 			HttpGet httpget = new HttpGet( Constants.ETMS_BASE_URL + Constants.ETMS_DOCTOR_LOG_PAGE
-					+"?half=0&txtBtnKind=rbAllDoc&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname()
-					+"&cur_date="+ ETMSUtil.getDateFormat(dt) + "&m_Date="+ ETMSUtil.getDateFormat(dt));
+					+"?half=1&txtBtnKind=rbAllDoc&mr_code="+pro.getUsername()+"&mr_name="+pro.getFullname()
+					+"&cur_date="+ ETMSUtil.getDateFormat(dt) + "&m_Date="+ ETMSUtil.getDateFormat(dt)
+					+"&sysdate="+ETMSUtil.getDateFormat(new Date()) + "&frmAsp=bulk");
 //			
-			System.out.println(httpget.getParams().toString());
+//			System.out.println(httpget.getParams().toString());
             
             ResponseHandler<String> responseHandler = new BasicResponseHandler();
             String responseBody = httpclient.execute(httpget, responseHandler);
@@ -502,7 +503,7 @@ public class Main {
             }
             
             
-            System.out.println(responseBody);
+//            System.out.println(responseBody);
             
             SAXBuilder sbuild = new SAXBuilder(null,null, new UncheckedJDOMFactory());
             sbuild.setExpandEntities(false);
@@ -534,8 +535,23 @@ public class Main {
             	String hospital_id = token[1];
             	String doctor_id = token[2];
             	String depart_id = token[3];
+            	boolean ispicked = false;
+            	for( int j = 6; j<= 19 ; j++){
+            		line = tdlist.get(j).getAttributeValue("id");
+            		String mark = "c_"+hospital_id+"_"+doctor_id+"_"+depart_id+"_"+ETMSUtil.getDateFormat(dt);
+            		if( mark.equals(line) ){
+            			if( ! "".equals(tdlist.get(j).getText()) && "cell_5".equals(tdlist.get(j).getAttributeValue("class")) ){
+            				ispicked = true;
+            			}else{
+            				ispicked = false;
+            			}
+            			break;
+            		}
+            	}
+            	
             	DoctorProperty dp = new DoctorProperty(hospital_id, depart_id, doctor_id,
             			level, Integer.parseInt(access));
+            	dp.setIspicked(ispicked);
             	vall.add(dp);
             	
             }
@@ -553,4 +569,136 @@ public class Main {
 		}
 		
 	}
+	
+	
+	//pickup the doctor to log
+	public void pickup(Date dt){
+		Calendar c = Calendar.getInstance();
+		c.setTime(dt);
+		int day = c.get(Calendar.DAY_OF_MONTH);
+		if( day >= 1 && day <= 15 ){  //pick up the same hospital and same depart
+			pickupHospitalDepart();
+			if( vused.size() < Constants.MINIMUM_LOG){
+				pickupHospital(Constants.MINIMUM_LOG);
+				if( vused.size() < Constants.MINIMUM_LOG ){
+					pickupAnyHospital(Constants.MINIMUM_LOG);
+				}
+			}
+		}else{
+			pickupAsLevel(Constants.MINIMUM_LOG);
+			if( vused.size() < Constants.MINIMUM_LOG ){
+				pickupAnyHospital(Constants.MINIMUM_LOG);
+			}
+		}
+	}
+	
+	private void pickupHospitalDepart(){
+		Random r = new Random();
+		DoctorProperty dp = null;
+		
+		while( dp == null){
+			int num = r.nextInt(vall.size());
+			dp =  vall.get(num);
+			if( dp.getIspicked() ){
+				dp = null;
+			}else{
+				dp.setIspicked(true);
+				vused.add(dp);
+			}
+		}
+		
+		Iterator<DoctorProperty> it = vall.iterator();
+		while( it.hasNext()){
+			DoctorProperty tmp = it.next();
+			if( tmp.getHospital().equals(dp.getHospital()) && tmp.getDept().equals(dp.getDept())
+					&& !tmp.getIspicked()){
+				tmp.setIspicked(true);
+				vused.add(tmp);
+			}
+		} 		
+		
+		
+		
+	}
+	
+	private void pickupHospital( int max){
+		Random r = new Random();
+		DoctorProperty dp = null;
+		
+		if( vused.size() != 0 ){
+			dp = vused.get(r.nextInt(vused.size()));
+		}
+		
+		
+		while( dp == null){
+			int num = r.nextInt(vall.size());
+			dp =  vall.get(num);
+			if( dp.getIspicked() ){
+				dp = null;
+			}else{
+				dp.setIspicked(true);
+				vused.add(dp);
+			}
+		}
+		
+		Iterator<DoctorProperty> it = vall.iterator();
+		while( it.hasNext() && vused.size() <= max){
+			DoctorProperty tmp = it.next();
+			if( tmp.getHospital().equals(dp.getHospital()) 
+					&& !tmp.getIspicked()){
+				tmp.setIspicked(true);
+				vused.add(tmp);
+			}
+		} 
+		
+	
+		
+	}
+	
+	
+	private void pickupAnyHospital(int max){
+		Random r = new Random();
+		
+		
+		while( vused.size() <= max ){
+			int num = r.nextInt(vall.size());
+			DoctorProperty dp =  vall.get(num);
+			if( dp.getIspicked() ){
+				//do nothing
+			}else{
+				dp.setIspicked(true);
+				vused.add(dp);
+			}
+		}
+		
+				
+	}
+	
+	private void pickupAsLevel(int max ){
+		
+		
+		Iterator<DoctorProperty> it = vall.iterator();
+		while( it.hasNext() && vused.size() <= max ){
+			DoctorProperty tmp = it.next();
+			if( tmp.getLevel().equals("A") && tmp.getAccess()< Constants.A_LEVEL_REQUIRED_LOG  
+					&& !tmp.getIspicked()){
+				tmp.setIspicked(true);
+				vused.add(tmp);
+			}else if( tmp.getLevel().equals("B") && tmp.getAccess()< Constants.B_LEVEL_REQUIRED_LOG  
+					&& !tmp.getIspicked()){
+				tmp.setIspicked(true);
+				vused.add(tmp);
+			}else if(  !tmp.getLevel().equals("A") && !tmp.getLevel().equals("B")
+					&& tmp.getAccess()< Constants.O_LEVEL_REQUIRED_LOG  
+					&& !tmp.getIspicked()){
+				tmp.setIspicked(true);
+				vused.add(tmp);
+			}
+		} 
+		
+	
+		
+	}
+	
+	
 }
