@@ -19,6 +19,8 @@ public class Controller {
 	
 	private String [] functionlist = {"Search", "Insert","Update","Delete"};
 	
+	private String CLASS_PACKAGE_FUNCTION = "com.ssga.javacodereview.controller";
+	
 	
 	public Controller ( IMyConnection c ){
 		this.conn = c;
@@ -59,6 +61,25 @@ public class Controller {
 	public String [] supportlist(){
 		return this.functionlist;
 	}
+	
+	public String getHeadMsgByLevel(String level){
+		try{
+			IOperator op = (IOperator) Class.forName( CLASS_PACKAGE_FUNCTION + "." + level).newInstance();
+			return op.getHeadMsg();
+		}catch(Exception e){
+			return Constants.getControlUnSupport(level) + e.getMessage();
+		}
+	}
+	
+	public String getHelpMsgByLevel(String level){
+		try{
+			IOperator op = (IOperator) Class.forName( CLASS_PACKAGE_FUNCTION + "." + level).newInstance();
+			return op.getHelpTips();
+		}catch(Exception e){
+			return Constants.getControlUnSupport(level) + e.getMessage();
+		}
+	}
+
 
 
 }

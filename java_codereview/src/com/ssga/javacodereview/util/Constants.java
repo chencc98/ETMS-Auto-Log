@@ -56,11 +56,57 @@ public class Constants {
 	public static String getViewTopMenuPrompt(){
 		return "Please type your options, number or word:";
 	}
+	public static String getViewShowErrPre(){
+		return "[Error]: ";
+	}
+	public static String getViewExitMenu(){
+		return "Exit";
+	}
+	public static String getViewCommandSuccess(){
+		return "Command Success";
+	}
+	public static String getViewUnknown(){
+		return "Unknown";
+	}
+	public static String getViewEnterNextLevel(String level){
+		return "Enter the mode " + level;
+	}
+	public static String getViewBackMenu(){
+		return "Back";
+	}
+	public static String getViewHelpMenu(){
+		return "Help";
+	}
 	
 	
 	
 	public static String getControlNullConnection(){
 		return "Connection is null, not available";
+	}
+	public static String getControlUnSupport( String fun){
+		return "This function "+ fun +" is not supported currently.";
+	}
+	public static String getOperatorSearchHeadMsg(){ 
+		return "1). search by id or type 'all' to list all" + "\n" 
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorUpdateHeadMsg(){ 
+		return "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + "\n" 
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + "\n"
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorDeleteHeadMsg(){ 
+		return "1). delete employee by id " + "\n" 
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorInsertHeadMsg(){ 
+		return "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + "\n" 
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + "\n"
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
 	}
 	
 	
