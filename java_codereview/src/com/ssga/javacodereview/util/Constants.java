@@ -21,25 +21,22 @@ public class Constants {
 	
 	public static String XML_EMPLOYEE_TAG = "employee";
 	
-	public static String getConnectionExceptionParseErrorMsg(){
-		return "Parse error during connection...";
-	}
-	public static String getConnectionExceptionIOErrorMsg(){
-		return "IO error during connection...";
-	}
-	public static String getConnectionExceptionNoSuchEmployee(String eid){
+	public static String COMMAND_NOCHANGE = "NoChange";
+	
+	public static String getMsgNoSuchEmployee(String eid){
 		return "No such employee with id = " + eid;
 	}
-	public static String getConnectionExceptionPartUpdateErr(int updated, int total){
+	public static String getMsgDeleteEmployeeError(String eid){
+		return "error when delete employee id=" + eid;
+	}
+	public static String getMsgPartUpdateErr(int updated, int total){
 		return "Only part of employee are updated "+ updated + "/"+total ;
 	}
-	public static String getConnectionExceptionExisting(String id, String name){
+	public static String getMsgEmployeeExisting(String id, String name){
 		return "The employee ["+id + "," + name +"] already exists";
 	}
-	public static String getConnectionExceptionXMLWrongState(){
-		return "XML illgal state error by jdom";
-	}
-	public static String getConnectionExceptionMultipleEmployee(String eid){
+	
+	public static String getMsgMultipleEmployeeError(String eid){
 		return "Multiple employee share the same id = " + eid;
 	}
 	
@@ -62,7 +59,7 @@ public class Constants {
 	public static String getViewExitMenu(){
 		return "Exit";
 	}
-	public static String getViewCommandSuccess(){
+	public static String getMsgCommandSuccess(){
 		return "Command Success";
 	}
 	public static String getViewUnknown(){
@@ -80,10 +77,10 @@ public class Constants {
 	
 	
 	
-	public static String getControlNullConnection(){
+	public static String getMsgNullConnection(){
 		return "Connection is null, not available";
 	}
-	public static String getControlUnSupport( String fun){
+	public static String getMsgUnSupport( String fun){
 		return "This function "+ fun +" is not supported currently.";
 	}
 	public static String getOperatorSearchHeadMsg(){ 
@@ -108,6 +105,32 @@ public class Constants {
 				+ "2). type help to show help " + "\n"
 				+ "3). type Back to up to home";
 	}
+	public static String getOperatorSearchHelpMsg(){ 
+		return "1). search by id or type 'all' to list all" + "\n" 
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorUpdateHelpMsg(){ 
+		return "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + "\n" 
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + "\n"
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorDeleteHelpMsg(){ 
+		return "1). delete employee by id " + "\n" 
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorInsertHelpMsg(){ 
+		return "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + "\n" 
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + "\n"
+				+ "2). type help to show help " + "\n"
+				+ "3). type Back to up to home";
+	}
+	public static String getOperatorCommandCheckError(String command){
+		return "this command " + command + "has syntax error. please check";
+	}
+	
 	
 	
 }

@@ -29,6 +29,7 @@ import com.ssga.javacodereview.util.Constants;
 public class XMLConnection implements IMyConnection {
 	private String xmlfile = ""; 
 	private Document xmldoc;
+	private String search_unset_key = "UNSET";
 	
 	
 	public XMLConnection(String file) throws MyConnectionException{
@@ -37,9 +38,9 @@ public class XMLConnection implements IMyConnection {
 		try{
 			xmldoc = builder.build(new File(xmlfile));
 		}catch(JDOMException je){
-			throw new MyConnectionException(Constants.getConnectionExceptionParseErrorMsg(), je);
+			throw new MyConnectionException(je.getMessage(), je);
 		}catch(IOException ie){
-			throw new MyConnectionException(Constants.getConnectionExceptionIOErrorMsg(), ie);
+			throw new MyConnectionException(ie.getMessage(), ie);
 		}
 	}
 
@@ -47,9 +48,12 @@ public class XMLConnection implements IMyConnection {
 	 * @see com.ssga.javacodereview.model.IMyConnection#delete(java.lang.String)
 	 */
 	public void delete(String eid, boolean totop) throws MyConnectionException {
-		Employee em = searchById(eid);
+		if( eid == null || eid.trim().equals("")){
+			throw new MyConnectionException(Constants.getMsgNoSuchEmployee(eid));
+		}
+		Employee em = searchById(eid.trim());
 		if( em == null ){
-			throw new MyConnectionException(Constants.getConnectionExceptionNoSuchEmployee(eid));
+			throw new MyConnectionException(Constants.getMsgNoSuchEmployee(eid));
 		}
 		
 		String childnewsup = "";
@@ -67,13 +71,31 @@ public class XMLConnection implements IMyConnection {
 		if( list.size() > 0 ){
 			int n = this.updateList(list);
 			if(  n == list.size()){
-				//do nothing, update is good
+				// update is good remove the parent
+				_delete(em);
 			}else{
-				throw new MyConnectionException(Constants.getConnectionExceptionPartUpdateErr(n, list.size()));
+				throw new MyConnectionException(Constants.getMsgPartUpdateErr(n, list.size()));
 			}
+		}else{
+			_delete(em);
 		}
 		
 		
+	}
+	
+	private void _delete(Employee em ) throws MyConnectionException {
+		try{
+			Element root = xmldoc.getRootElement();    //IllegalStateException
+			Element child = Employee2XMLElement(em);
+			boolean b = root.removeContent(child);
+			if( b ){
+				save();
+			}else{
+				throw new MyConnectionException(Constants.getMsgDeleteEmployeeError(em.getId()));
+			}
+		}catch(IllegalStateException ie){
+			throw new MyConnectionException(ie.getMessage(), ie);
+		} 
 	}
 
 	/* (non-Javadoc)
@@ -82,13 +104,13 @@ public class XMLConnection implements IMyConnection {
 	public void insert(Employee em) throws MyConnectionException {
 		Employee s = searchById( em.getId());
 		if( s != null ){
-			throw new MyConnectionException( Constants.getConnectionExceptionExisting(s.getId(), s.getName()));
+			throw new MyConnectionException( Constants.getMsgEmployeeExisting(s.getId(), s.getName()));
 		}
 		
 		if( !em.getSuperid().equals("")){
 			s = searchById( em.getSuperid() );
 			if( s == null ){
-				throw new MyConnectionException ( Constants.getConnectionExceptionNoSuchEmployee(em.getSuperid()));
+				throw new MyConnectionException ( Constants.getMsgNoSuchEmployee(em.getSuperid()));
 			}
 		}
 		
@@ -99,7 +121,7 @@ public class XMLConnection implements IMyConnection {
 			
 			save();
 		}catch(IllegalStateException ie){
-			throw new MyConnectionException(Constants.getConnectionExceptionXMLWrongState(), ie);
+			throw new MyConnectionException(ie.getMessage(), ie);
 		} 
 		
 		
@@ -112,19 +134,19 @@ public class XMLConnection implements IMyConnection {
 		List<Employee> list = new ArrayList<Employee> ();
 		String searchid = p.containsKey(Constants.SEARCH_KEY_ID) 
 							? p.getProperty(Constants.SEARCH_KEY_ID)
-							: "";
+							: this.search_unset_key;
 		String searchname = p.containsKey(Constants.SEARCH_KEY_NAME)
 							? p.getProperty(Constants.SEARCH_KEY_NAME)
-							: "";
+							: this.search_unset_key;
 		String searchsid = p.containsKey(Constants.SEARCH_KEY_SID)
 							? p.getProperty(Constants.SEARCH_KEY_SID)
-							: "";
+							: this.search_unset_key;
 		String searchage = p.containsKey(Constants.SEARCH_KEY_AGE)
 							? p.getProperty(Constants.SEARCH_KEY_AGE)
-							: "";
+							: this.search_unset_key;
 		String searchageop = p.containsKey(Constants.SEARCH_KEY_AGEOP)
 							? p.getProperty(Constants.SEARCH_KEY_AGEOP)
-							: "";
+							: this.search_unset_key;
 		
 		try{
 			Element root = xmldoc.getRootElement();    //IllegalStateException
@@ -138,48 +160,52 @@ public class XMLConnection implements IMyConnection {
 				}
 			}
 		}catch(IllegalStateException ie){
-			throw new MyConnectionException(Constants.getConnectionExceptionXMLWrongState(), ie);
+			throw new MyConnectionException(ie.getMessage(), ie);
+		}catch(NumberFormatException nfe){
+			throw new MyConnectionException( nfe.getMessage(), nfe);
 		}
 		return list;
 	}
 	
 	public Employee searchById( String id) throws MyConnectionException{
+		if( id == null || id.trim().equals("")){
+			return null;
+		}
 		Properties p = new Properties();
-		p.setProperty(Constants.SEARCH_KEY_ID, id);
+		p.setProperty(Constants.SEARCH_KEY_ID, id.trim());
 		List<Employee> list = search(p);
 		if( list.size() == 0 ){
 			return null;
 		}else if ( list.size() > 1 ){
-			throw new MyConnectionException(Constants.getConnectionExceptionMultipleEmployee(id));
+			throw new MyConnectionException(Constants.getMsgMultipleEmployeeError(id));
 		}else{
 			return list.get(0);
 		}
 	}
 	
 	private boolean _match(Employee em, String searchid, String searchname, String searchsid,
-		String searchage, String searchageop ){
-		if( searchid == null || searchid.equals("") || searchid.equals("*") 
-				|| em.getId().equals(searchid) ){
+		String searchage, String searchageop ) throws NumberFormatException{
+		if( searchid == null || searchid.trim().equals("") || searchid.trim().equals("*") 
+				|| em.getId().equals(searchid.trim()) || this.search_unset_key.equals(searchid.trim()) ){
 			//do nothing
 		}else {
 			return false;
 		}
 		
-		if( searchname == null || searchname.equals("") || searchname.equals("*")
-				|| em.getName().indexOf(searchname) != -1 ){
+		if( searchname == null || searchname.trim().equals("") || searchname.trim().equals("*")
+				|| em.getName().indexOf(searchname.trim()) != -1 || this.search_unset_key.equals(searchname.trim())){
 			//do nothing
 		}else{
 			return false;
 		}
 		
-		if( searchsid == null || searchsid.equals("") || searchsid.equals("*") 
-				|| em.getSuperid().equals(searchsid) ){
+		if( (searchsid != null && em.getSuperid().equals(searchsid.trim())) || this.search_unset_key.equals(searchsid) ){
 			//do nothing
 		}else {
 			return false;
 		}
 		
-		if( searchage == null || searchage.equals("")){
+		if( searchage == null || searchage.equals("") || this.search_unset_key.equals(searchage.trim())){
 			//do nothing
 		}else if( searchageop.equals(Constants.SEARCH_KEY_AGEOP_EQ) 
 				&& Integer.parseInt(searchage) == em.getAge()){
@@ -216,10 +242,10 @@ public class XMLConnection implements IMyConnection {
 			}
 			
 			if( !matched ){
-				throw new MyConnectionException(Constants.getConnectionExceptionNoSuchEmployee(em.getId()) );
+				throw new MyConnectionException(Constants.getMsgNoSuchEmployee(em.getId()) );
 			}
 		}catch(IllegalStateException ie){
-			throw new MyConnectionException(Constants.getConnectionExceptionXMLWrongState(), ie);
+			throw new MyConnectionException(ie.getMessage(), ie);
 		}
 		
 	}
@@ -248,14 +274,14 @@ public class XMLConnection implements IMyConnection {
 					ids = ids + tmp.getId() + ",";
 				}
 				ids = "[" + (ids.endsWith(",")? ids.substring(0, ids.length() -1) : ids ) + "]";
-				throw new MyConnectionException(Constants.getConnectionExceptionNoSuchEmployee(ids));
+				throw new MyConnectionException(Constants.getMsgNoSuchEmployee(ids));
 			}else{
 				save();
 				return matched;
 			}
 			
 		}catch(IllegalStateException ie){
-			throw new MyConnectionException(Constants.getConnectionExceptionXMLWrongState(), ie);
+			throw new MyConnectionException(ie.getMessage(), ie);
 		}
 		
 	}
@@ -266,7 +292,7 @@ public class XMLConnection implements IMyConnection {
 			XMLOutputter xmlOut = new XMLOutputter(Format.getPrettyFormat());
 			xmlOut.output(xmldoc, fw);
 		}catch (IOException e) {
-			throw new MyConnectionException(Constants.getConnectionExceptionIOErrorMsg(), e);
+			throw new MyConnectionException(e.getMessage(), e);
 		}
 	}
 	

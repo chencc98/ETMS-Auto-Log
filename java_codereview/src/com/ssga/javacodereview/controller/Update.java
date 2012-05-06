@@ -3,6 +3,12 @@
  */
 package com.ssga.javacodereview.controller;
 
+import java.util.List;
+import java.util.Properties;
+
+import com.ssga.javacodereview.model.IMyConnection;
+import com.ssga.javacodereview.model.entity.Employee;
+import com.ssga.javacodereview.util.MyConnectionException;
 import com.ssga.javacodereview.util.OperatorException;
 import com.ssga.javacodereview.util.Constants;
 
@@ -11,6 +17,10 @@ import com.ssga.javacodereview.util.Constants;
  *
  */
 public class Update implements IOperator {
+	
+	private IMyConnection con = null;
+	
+	//private String update_nochange_field = "NoChange";
 
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
@@ -25,17 +35,53 @@ public class Update implements IOperator {
 	 */
 	@Override
 	public String getHelpTips() {
-		// TODO Auto-generated method stub
-		return null;
+		return Constants.getOperatorUpdateHelpMsg();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
 	@Override
-	public String operate() throws OperatorException {
-		// TODO Auto-generated method stub
-		return null;
+	public String operate(String command) throws OperatorException {
+		Employee em = OperatorCommandCheck.checkCommand(command);
+		if( em == null ){
+			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
+		}else if( em.getId().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)){
+			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
+		}
+		
+		try{
+			Properties p = new Properties();
+			p.setProperty(Constants.SEARCH_KEY_ID, em.getId());
+			List<Employee> list = this.con.search(p);
+			if( list.size() == 0 ){
+				throw new OperatorException( Constants.getMsgNoSuchEmployee(em.getId()));
+			}else{
+				Employee u = list.get(0);
+				if( em.getName().equals("") || em.getName().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)){
+					em.setName(u.getName());
+				}
+				
+				if( em.getSuperid().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)){
+					em.setSuperid(u.getSuperid());
+				}
+				
+				if( em.getAge() == -1 ){
+					em.setAge(u.getAge());
+				}
+				
+				this.con.update(em);
+				
+			}
+		}catch (MyConnectionException e) {
+			throw new OperatorException( e.getMessage(), e);
+		}
+		
+		return Constants.getMsgCommandSuccess();
+	}
+	
+	public void setConnection( IMyConnection conn){
+		this.con = conn;
 	}
 
 }

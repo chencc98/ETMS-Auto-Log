@@ -124,24 +124,26 @@ public class ConsoleView implements IMyView {
 			if( Constants.getViewExitMenu().equalsIgnoreCase(keyaction) 
 					|| String.valueOf(this.functions.length).equalsIgnoreCase(keyaction)){
 				this.running = false;
-				return Constants.getViewCommandSuccess();
+				return Constants.getMsgCommandSuccess();
 			}else if(isCommandInFunctions(keyaction)){
 				this.currentLevel = getLevelFromCommand(keyaction);
 				return Constants.getViewEnterNextLevel(currentLevel);
 				
 			}else{
-				return Constants.getControlUnSupport(keyaction);
+				return Constants.getMsgUnSupport(level);
 			}
 		}else{//below is the valid level/functions
 			if( Constants.getViewBackMenu().equalsIgnoreCase(keyaction)){
 				this.currentLevel = this.LEVEL_TOP;
-				return Constants.getViewCommandSuccess();
+				return Constants.getMsgCommandSuccess();
 			}else if( Constants.getViewHelpMenu().equalsIgnoreCase(keyaction)){
 				return this.ctrl.getHelpMsgByLevel(level);
+			}else{
+				return this.ctrl.process(level, keyaction);
 			}
 		}
 		
-		return "";
+		
 		
 	}
 	

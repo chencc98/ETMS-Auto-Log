@@ -3,6 +3,9 @@
  */
 package com.ssga.javacodereview.controller;
 
+import com.ssga.javacodereview.model.IMyConnection;
+import com.ssga.javacodereview.model.entity.Employee;
+import com.ssga.javacodereview.util.MyConnectionException;
 import com.ssga.javacodereview.util.OperatorException;
 import com.ssga.javacodereview.util.Constants;
 
@@ -12,6 +15,8 @@ import com.ssga.javacodereview.util.Constants;
  */
 public class Insert implements IOperator {
 
+	private IMyConnection con = null;
+	
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
 	 */
@@ -25,17 +30,35 @@ public class Insert implements IOperator {
 	 */
 	@Override
 	public String getHelpTips() {
-		// TODO Auto-generated method stub
-		return null;
+		return Constants.getOperatorInsertHelpMsg();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
 	@Override
-	public String operate() throws OperatorException {
-		// TODO Auto-generated method stub
-		return null;
+	public String operate(String command) throws OperatorException {
+		Employee em = OperatorCommandCheck.checkCommand(command);
+		if( em == null ){
+			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
+		}
+		if( em.getName().equals("") || em.getName().equalsIgnoreCase(Constants.COMMAND_NOCHANGE) 
+				|| em.getAge()< 0 || em.getSuperid().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)
+				|| em.getId().matches("\\D")){
+			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
+		}
+		
+		try{
+			this.con.insert(em);
+		}catch (MyConnectionException e) {
+			throw new OperatorException( e.getMessage(), e);
+		}
+		
+		return Constants.getMsgCommandSuccess();
+	}
+	
+	public void setConnection( IMyConnection conn){
+		this.con = conn;
 	}
 
 }

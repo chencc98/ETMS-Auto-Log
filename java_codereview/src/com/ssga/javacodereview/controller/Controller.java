@@ -7,6 +7,7 @@ import com.ssga.javacodereview.model.IMyConnection;
 import com.ssga.javacodereview.util.Constants;
 import com.ssga.javacodereview.util.ControllerRuntimeException;
 import com.ssga.javacodereview.util.MyConnectionException;
+import com.ssga.javacodereview.util.OperatorException;
 
 /**
  * @author e464150
@@ -33,7 +34,7 @@ public class Controller {
 	public void connect(){
 		try{
 			if( this.conn == null){
-				this.errMsg = Constants.getControlNullConnection();
+				this.errMsg = Constants.getMsgNullConnection();
 				throw new ControllerRuntimeException(this.errMsg);
 			}
 			conn.connect();
@@ -67,7 +68,7 @@ public class Controller {
 			IOperator op = (IOperator) Class.forName( CLASS_PACKAGE_FUNCTION + "." + level).newInstance();
 			return op.getHeadMsg();
 		}catch(Exception e){
-			return Constants.getControlUnSupport(level) + e.getMessage();
+			return Constants.getMsgUnSupport(level) + e.getMessage();
 		}
 	}
 	
@@ -76,7 +77,19 @@ public class Controller {
 			IOperator op = (IOperator) Class.forName( CLASS_PACKAGE_FUNCTION + "." + level).newInstance();
 			return op.getHelpTips();
 		}catch(Exception e){
-			return Constants.getControlUnSupport(level) + e.getMessage();
+			return Constants.getMsgUnSupport(level) + e.getMessage();
+		}
+	}
+	
+	public String process(String function, String command){
+		try{
+			IOperator op = (IOperator) Class.forName( CLASS_PACKAGE_FUNCTION + "." + function).newInstance();
+			op.setConnection(conn);
+			return op.operate(command);
+		}catch(OperatorException oe){
+			return oe.getMessage();
+		}catch(Exception e){
+			return Constants.getMsgUnSupport(function) + e.getMessage();
 		}
 	}
 

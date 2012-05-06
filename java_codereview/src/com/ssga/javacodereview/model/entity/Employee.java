@@ -25,7 +25,7 @@ public class Employee {
 		this.id = "";
 		this.name = "";
 		this.superid = "";
-		this.age = 0;
+		this.age = -1;
 	}
 	
 	public String getId(){
