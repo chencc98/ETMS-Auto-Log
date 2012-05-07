@@ -134,7 +134,7 @@ public class Main {
 			DoctorProperty dp = it.next();
 			for( DoctorProperty used : m.getVall() ){
 				if( used.equals(dp)){
-					System.out.println(dp.toString());
+					System.out.println(used.toString());
 					break;
 				}
 			}
