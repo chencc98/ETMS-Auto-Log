@@ -27,7 +27,6 @@ public class Delete implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHelpTips()
 	 */
-	@Override
 	public String getHelpTips() {
 		return Constants.getOperatorDeleteHelpMsg();
 	}
