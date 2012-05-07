@@ -59,5 +59,15 @@ public class Employee {
 	public String toString(){
 		return this.name + ", ID:" + this.id + ", Age:" + this.age;
 	}
+	
+	public boolean equals(Employee m){
+		if( this.getId().equals(m.getId()) && this.getName().equals(m.getName())
+				&& this.getSuperid().equals(m.getSuperid()) 
+				&& this.getAge() == m.getAge() ){
+			return true;
+		}else{
+			return false;
+		}
+	}
 
 }

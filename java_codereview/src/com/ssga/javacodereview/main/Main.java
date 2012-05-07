@@ -20,6 +20,9 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		
+		
 		String file = "test.xml";
 		try {
 			IMyConnection con = new XMLConnection(file);

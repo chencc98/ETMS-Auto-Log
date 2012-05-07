@@ -22,6 +22,15 @@ public class Constants {
 	public static String XML_EMPLOYEE_TAG = "employee";
 	
 	public static String COMMAND_NOCHANGE = "NoChange";
+	public static String SEARCH_ALL_MASK = "*";
+	
+	public static int AGE_NOT_SET = -1;
+	public static int AGE_PARSE_ERROR = -2;
+	
+	
+	public static String getEOL(){
+		return System.getProperty("line.separator", "\n");
+	}
 	
 	public static String getMsgNoSuchEmployee(String eid){
 		return "No such employee with id = " + eid;
@@ -53,9 +62,7 @@ public class Constants {
 	public static String getViewTopMenuPrompt(){
 		return "Please type your options, number or word:";
 	}
-	public static String getViewShowErrPre(){
-		return "[Error]: ";
-	}
+	
 	public static String getViewExitMenu(){
 		return "Exit";
 	}
@@ -84,51 +91,55 @@ public class Constants {
 		return "This function "+ fun +" is not supported currently.";
 	}
 	public static String getOperatorSearchHeadMsg(){ 
-		return "1). search by id or type 'all' to list all" + "\n" 
-				+ "2). type help to show help " + "\n"
+		return "-----------------------------------------------------" + Constants.getEOL()
+				+ "1). search by id or type 'all' to list all" + Constants.getEOL() 
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorUpdateHeadMsg(){ 
-		return "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + "\n" 
-				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + "\n"
-				+ "2). type help to show help " + "\n"
+		return "-----------------------------------------------------" + Constants.getEOL()
+				+ "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + Constants.getEOL()  
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + Constants.getEOL() 
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorDeleteHeadMsg(){ 
-		return "1). delete employee by id " + "\n" 
-				+ "2). type help to show help " + "\n"
+		return "-----------------------------------------------------" + Constants.getEOL()
+				+ "1). delete employee by id " + Constants.getEOL()  
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorInsertHeadMsg(){ 
-		return "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + "\n" 
-				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + "\n"
-				+ "2). type help to show help " + "\n"
+		return "-----------------------------------------------------" + Constants.getEOL()
+				+ "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + Constants.getEOL()  
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + Constants.getEOL() 
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorSearchHelpMsg(){ 
-		return "1). search by id or type 'all' to list all" + "\n" 
-				+ "2). type help to show help " + "\n"
+		return "1). search by id or type 'all' to list all" + Constants.getEOL()  
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorUpdateHelpMsg(){ 
-		return "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + "\n" 
-				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + "\n"
-				+ "2). type help to show help " + "\n"
+		return "1.1). type '<eid>,[name],[superid],[age]' to update one employee" + Constants.getEOL()  
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to update" + Constants.getEOL() 
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorDeleteHelpMsg(){ 
-		return "1). delete employee by id " + "\n" 
-				+ "2). type help to show help " + "\n"
+		return "1). delete employee by id " + Constants.getEOL()  
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorInsertHelpMsg(){ 
-		return "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + "\n" 
-				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + "\n"
-				+ "2). type help to show help " + "\n"
+		return "1.1). type '<eid>,[name],[superid],[age]' to insert one employee" + Constants.getEOL()  
+				+ "1.2). type 'id=<eid>,name=[name],superid=[superid],age=[age] to insert" + Constants.getEOL() 
+				+ "2). type help to show help " + Constants.getEOL() 
 				+ "3). type Back to up to home";
 	}
 	public static String getOperatorCommandCheckError(String command){
-		return "this command " + command + "has syntax error. please check";
+		return "this command [" + command + "] has syntax error. please check";
 	}
 	
 	

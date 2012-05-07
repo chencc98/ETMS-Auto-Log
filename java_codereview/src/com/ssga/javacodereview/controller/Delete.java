@@ -36,14 +36,21 @@ public class Delete implements IOperator {
 	 */
 	@Override
 	public String operate(String command) throws OperatorException {
+		// check the command syntax, only support employee id 
 		Employee em = OperatorCommandCheck.checkCommand(command);
 		if( em == null ){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
-		}else if( !em.getName().equals("") || !em.getSuperid().equals("") || em.getAge() != -1){
+		}else if( !em.getName().equals("") || !em.getSuperid().equals("") 
+				|| em.getAge() != Constants.AGE_NOT_SET){
+			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
+		}else if( em.getId().equalsIgnoreCase(Constants.SEARCH_ALL_MASK)){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
 		}
 		
+		
+		
 		try{
+			// invoke the connection to delete this employee
 			this.con.delete(em.getId(), false);
 		}catch (MyConnectionException e) {
 			throw new OperatorException( e.getMessage(), e);

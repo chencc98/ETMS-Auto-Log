@@ -99,8 +99,8 @@ public class ConsoleView implements IMyView {
 			}
 			menus = menus + i + ":" + Constants.getViewExitMenu();
 			
-			return Constants.getViewTopMenuHead() + System.getProperty("line.separator", "\n")
-					+ menus + System.getProperty("line.separator", "\n")
+			return Constants.getViewTopMenuHead() + Constants.getEOL()
+					+ menus + Constants.getEOL()
 					+ Constants.getViewTopMenuPrompt();
 		}else{   //then should be the function we support
 			return this.ctrl.getHeadMsgByLevel(level);
@@ -130,7 +130,7 @@ public class ConsoleView implements IMyView {
 				return Constants.getViewEnterNextLevel(currentLevel);
 				
 			}else{
-				return Constants.getMsgUnSupport(level);
+				return Constants.getMsgUnSupport(keyaction);
 			}
 		}else{//below is the valid level/functions
 			if( Constants.getViewBackMenu().equalsIgnoreCase(keyaction)){

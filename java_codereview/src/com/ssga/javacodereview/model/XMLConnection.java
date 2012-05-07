@@ -29,9 +29,13 @@ import com.ssga.javacodereview.util.Constants;
 public class XMLConnection implements IMyConnection {
 	private String xmlfile = ""; 
 	private Document xmldoc;
-	private String search_unset_key = "UNSET";
+//	private String search_unset_key = "UNSET";
 	
-	
+	/**
+	 * get the xml file and parse it as jdom
+	 * @param file   point to the xml file location
+	 * @throws MyConnectionException
+	 */
 	public XMLConnection(String file) throws MyConnectionException{
 		xmlfile = file;
 		SAXBuilder builder=new SAXBuilder();
@@ -48,16 +52,17 @@ public class XMLConnection implements IMyConnection {
 	 * @see com.ssga.javacodereview.model.IMyConnection#delete(java.lang.String)
 	 */
 	public void delete(String eid, boolean totop) throws MyConnectionException {
-		if( eid == null || eid.trim().equals("")){
+		if( eid == null || eid.trim().equals("") || eid.trim().equals(Constants.SEARCH_ALL_MASK)){
 			throw new MyConnectionException(Constants.getMsgNoSuchEmployee(eid));
 		}
+		// make sure this employee exists
 		Employee em = searchById(eid.trim());
 		if( em == null ){
 			throw new MyConnectionException(Constants.getMsgNoSuchEmployee(eid));
 		}
 		
 		String childnewsup = "";
-		if( ! totop ){
+		if( ! totop ){  // the child to be the top or under others
 			childnewsup = em.getSuperid();
 		}
 		
@@ -69,11 +74,12 @@ public class XMLConnection implements IMyConnection {
 			sub.setSuperid(childnewsup);
 		}
 		if( list.size() > 0 ){
-			int n = this.updateList(list);
+			int n = this.updateList(list);  //update the child first
 			if(  n == list.size()){
 				// update is good remove the parent
 				_delete(em);
 			}else{
+				// if only parts of children are updated, will not remove the parent
 				throw new MyConnectionException(Constants.getMsgPartUpdateErr(n, list.size()));
 			}
 		}else{
@@ -86,13 +92,20 @@ public class XMLConnection implements IMyConnection {
 	private void _delete(Employee em ) throws MyConnectionException {
 		try{
 			Element root = xmldoc.getRootElement();    //IllegalStateException
-			Element child = Employee2XMLElement(em);
-			boolean b = root.removeContent(child);
-			if( b ){
-				save();
-			}else{
-				throw new MyConnectionException(Constants.getMsgDeleteEmployeeError(em.getId()));
+			List<Element> rootchildren = root.getChildren();
+			for( Element xmlem : rootchildren ){
+				Employee test = XMLElement2Employee(xmlem);
+				if( test.equals(em)){
+					boolean b = xmlem.getParentElement().removeContent(xmlem); // this statement is import
+					if( b ){
+						save();
+					}else{
+						throw new MyConnectionException(Constants.getMsgDeleteEmployeeError(em.getId()));
+					}
+					break;
+				}
 			}
+			
 		}catch(IllegalStateException ie){
 			throw new MyConnectionException(ie.getMessage(), ie);
 		} 
@@ -134,19 +147,19 @@ public class XMLConnection implements IMyConnection {
 		List<Employee> list = new ArrayList<Employee> ();
 		String searchid = p.containsKey(Constants.SEARCH_KEY_ID) 
 							? p.getProperty(Constants.SEARCH_KEY_ID)
-							: this.search_unset_key;
+							: Constants.SEARCH_ALL_MASK;
 		String searchname = p.containsKey(Constants.SEARCH_KEY_NAME)
 							? p.getProperty(Constants.SEARCH_KEY_NAME)
-							: this.search_unset_key;
+							: Constants.SEARCH_ALL_MASK;
 		String searchsid = p.containsKey(Constants.SEARCH_KEY_SID)
 							? p.getProperty(Constants.SEARCH_KEY_SID)
-							: this.search_unset_key;
+							: Constants.SEARCH_ALL_MASK;
 		String searchage = p.containsKey(Constants.SEARCH_KEY_AGE)
 							? p.getProperty(Constants.SEARCH_KEY_AGE)
-							: this.search_unset_key;
+							: Constants.SEARCH_ALL_MASK;
 		String searchageop = p.containsKey(Constants.SEARCH_KEY_AGEOP)
 							? p.getProperty(Constants.SEARCH_KEY_AGEOP)
-							: this.search_unset_key;
+							: Constants.SEARCH_ALL_MASK;
 		
 		try{
 			Element root = xmldoc.getRootElement();    //IllegalStateException
@@ -168,7 +181,7 @@ public class XMLConnection implements IMyConnection {
 	}
 	
 	public Employee searchById( String id) throws MyConnectionException{
-		if( id == null || id.trim().equals("")){
+		if( id == null || id.trim().equals("") || id.trim().equals(Constants.SEARCH_ALL_MASK)){
 			return null;
 		}
 		Properties p = new Properties();
@@ -185,27 +198,28 @@ public class XMLConnection implements IMyConnection {
 	
 	private boolean _match(Employee em, String searchid, String searchname, String searchsid,
 		String searchage, String searchageop ) throws NumberFormatException{
-		if( searchid == null || searchid.trim().equals("") || searchid.trim().equals("*") 
-				|| em.getId().equals(searchid.trim()) || this.search_unset_key.equals(searchid.trim()) ){
+		if(  searchid.trim().equals(Constants.SEARCH_ALL_MASK) 
+				|| em.getId().equals(searchid.trim())  ){
 			//do nothing
 		}else {
 			return false;
 		}
 		
-		if( searchname == null || searchname.trim().equals("") || searchname.trim().equals("*")
-				|| em.getName().indexOf(searchname.trim()) != -1 || this.search_unset_key.equals(searchname.trim())){
+		if(  searchname.trim().equals(Constants.SEARCH_ALL_MASK)
+				|| em.getName().indexOf(searchname.trim()) != -1 ){
 			//do nothing
 		}else{
 			return false;
 		}
 		
-		if( (searchsid != null && em.getSuperid().equals(searchsid.trim())) || this.search_unset_key.equals(searchsid) ){
+		if( searchsid.trim().equals(Constants.SEARCH_ALL_MASK) 
+				|| em.getSuperid().equals(searchsid.trim()) ){
 			//do nothing
 		}else {
 			return false;
 		}
 		
-		if( searchage == null || searchage.equals("") || this.search_unset_key.equals(searchage.trim())){
+		if( searchage.trim().equals(Constants.SEARCH_ALL_MASK) ){
 			//do nothing
 		}else if( searchageop.equals(Constants.SEARCH_KEY_AGEOP_EQ) 
 				&& Integer.parseInt(searchage) == em.getAge()){

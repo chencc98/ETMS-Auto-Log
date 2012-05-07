@@ -43,40 +43,48 @@ public class Search implements IOperator {
 	 */
 	@Override
 	public String operate(String command) throws OperatorException {
+		// check the synctax
 		Employee em = OperatorCommandCheck.checkCommand(command);
 		if( em == null ){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
-		}else if ( em.getId().equalsIgnoreCase(Constants.COMMAND_NOCHANGE) 
+		}else if ( em.getId().equalsIgnoreCase(Constants.SEARCH_ALL_MASK) 
 				|| !em.getName().equals("") || !em.getSuperid().equals("") || em.getAge() != -1 ){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
 		}
 		
 		try {
 			if( em.getId().equalsIgnoreCase("All")){
-				return travelEmployee(null, "");
+				return travelEmployee(null, "");   // if all, we will use this function to loop the data
 			}else{
 				Properties p = new Properties();
 				p.setProperty(Constants.SEARCH_KEY_ID, em.getId());
 				List<Employee>  list = this.con.search(p);
 				
+				// find this employee first, if no exist, return error
+				if( list.size() == 0){
+					throw new OperatorException(Constants.getMsgNoSuchEmployee(em.getId()));
+				}
+				
 				String returnstr = "";
 				Employee s = list.get(0);
 				
-				returnstr = s.toString() + "\n";
+				returnstr = s.toString() + Constants.getEOL();
 				
+				// get sub first
 				list = getSub(s.getId());
-				if( list.size() == 0 ){
-					returnstr = returnstr + "\tSub: None \n";
+				if( list.size() == 0 ){ 
+					returnstr = returnstr + "\tSub: None " + Constants.getEOL();
 				}else{
 					//returnstr = returnstr + "\t";
 					Iterator<Employee> it = list.iterator();
 					while( it.hasNext() ){
 						Employee sub = it.next();
-						returnstr = returnstr + "\tSub: " + sub.toString() + "\n" ;
+						returnstr = returnstr + "\tSub: " + sub.toString() + Constants.getEOL() ;
 						
 					}
 				}
 				
+				//then get the superior
 				if( s.getSuperid().equals("")){
 					returnstr += "\tSup: None";
 				}else{
@@ -120,13 +128,13 @@ public class Search implements IOperator {
 		if( parent == null ){
 			List<Employee> sub = getSub("");
 			for( Employee p : sub ){
-				result += p.toString() + "\n";
+				result += p.toString() + Constants.getEOL();
 				result += travelEmployee( p, "\t" );
 			}
 		}else{
 			List<Employee> sub = getSub(parent.getId());
 			for( Employee p : sub ){
-				result += prefix + p.toString() + "\n";
+				result += prefix + p.toString() + Constants.getEOL();
 				result += travelEmployee( p, prefix + "\t" );
 			}
 		}

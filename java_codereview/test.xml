@@ -7,18 +7,6 @@
     <age>50</age>
   </employee>
   <employee>
-    <id>23342</id>
-    <name>namehere</name>
-    <superiorid />
-    <age>23</age>
-  </employee>
-  <employee>
-    <id>23341</id>
-    <name>namehere</name>
-    <superiorid>23342</superiorid>
-    <age>23</age>
-  </employee>
-  <employee>
     <id>23231</id>
     <name>sssse sddds</name>
     <superiorid>23342</superiorid>
@@ -37,21 +25,9 @@
     <age>25</age>
   </employee>
   <employee>
-    <id>53231</id>
-    <name>ssPetere sds</name>
-    <superiorid>23341</superiorid>
-    <age>25</age>
-  </employee>
-  <employee>
     <id>63231</id>
     <name>ssPetere sds</name>
-    <superiorid>23341</superiorid>
-    <age>23</age>
-  </employee>
-  <employee>
-    <id>73231</id>
-    <name>ssPetere sds</name>
-    <superiorid>23341</superiorid>
+    <superiorid>23342</superiorid>
     <age>23</age>
   </employee>
   <employee>
@@ -65,5 +41,41 @@
     <name>Carl</name>
     <superiorid>83231</superiorid>
     <age>30</age>
+  </employee>
+  <employee>
+    <id>2345</id>
+    <name>john</name>
+    <superiorid />
+    <age>31</age>
+  </employee>
+  <employee>
+    <id>3456</id>
+    <name>jsdj</name>
+    <superiorid>2345</superiorid>
+    <age>40</age>
+  </employee>
+  <employee>
+    <id>73232</id>
+    <name>jhusd</name>
+    <superiorid>23342</superiorid>
+    <age>50</age>
+  </employee>
+  <employee>
+    <id>23344</id>
+    <name>nochange</name>
+    <superiorid>2345</superiorid>
+    <age>30</age>
+  </employee>
+  <employee>
+    <id>23342</id>
+    <name>why</name>
+    <superiorid />
+    <age>40</age>
+  </employee>
+  <employee>
+    <id>53231</id>
+    <name>again</name>
+    <superiorid>23342</superiorid>
+    <age>2</age>
   </employee>
 </employees>

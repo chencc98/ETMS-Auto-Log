@@ -38,17 +38,21 @@ public class Insert implements IOperator {
 	 */
 	@Override
 	public String operate(String command) throws OperatorException {
+		// check the command syntax
 		Employee em = OperatorCommandCheck.checkCommand(command);
 		if( em == null ){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
 		}
-		if( em.getName().equals("") || em.getName().equalsIgnoreCase(Constants.COMMAND_NOCHANGE) 
-				|| em.getAge()< 0 || em.getSuperid().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)
-				|| em.getId().matches("\\D")){
+		if( em.getId().equals(Constants.SEARCH_ALL_MASK) || !em.getId().matches("[0-9]+") || em.getName().equals("") 
+				||  em.getName().equals(Constants.SEARCH_ALL_MASK)
+				|| em.getSuperid().equals(Constants.SEARCH_ALL_MASK)
+				|| em.getAge() == Constants.AGE_NOT_SET  
+				){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
 		}
 		
 		try{
+			// invoke the connection to insert the employee
 			this.con.insert(em);
 		}catch (MyConnectionException e) {
 			throw new OperatorException( e.getMessage(), e);

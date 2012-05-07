@@ -46,7 +46,9 @@ public class Update implements IOperator {
 		Employee em = OperatorCommandCheck.checkCommand(command);
 		if( em == null ){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
-		}else if( em.getId().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)){
+		}else if( em.getId().equalsIgnoreCase(Constants.SEARCH_ALL_MASK)
+				|| em.getName().equals(Constants.SEARCH_ALL_MASK)
+				|| em.getSuperid().equals(Constants.SEARCH_ALL_MASK)){
 			throw new OperatorException(Constants.getOperatorCommandCheckError(command));
 		}
 		

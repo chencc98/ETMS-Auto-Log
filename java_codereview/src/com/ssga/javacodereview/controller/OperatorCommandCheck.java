@@ -8,7 +8,9 @@ import com.ssga.javacodereview.util.Constants;
 
 /**
  * @author asus
- *
+ * the input from view should have basic synctax. here we will check the syntax
+ * <eid>,[name],[sid],[age]:  employee id is required, other three fields are optional.
+ * another form, id=<eid>,name=[name],superiorid=[sid],age=[age]
  */
 public class OperatorCommandCheck {
 	
@@ -58,8 +60,8 @@ public class OperatorCommandCheck {
 	
 	private static boolean setEmployeeField( Employee em, String field, String part){
 		boolean r = false;
-		if( field.equals(Constants.SEARCH_KEY_ID) ){
-			if( part == null ){
+		if( field.equals(Constants.SEARCH_KEY_ID) ){   //check the id field
+			if( part == null || part.trim().equals("") ){
 				r =  false;
 			}else{
 				String [] keyvalue = part.split("=");
@@ -106,21 +108,22 @@ public class OperatorCommandCheck {
 				}
 			}
 		}else if( field.equals(Constants.SEARCH_KEY_AGE) ){
-			if( part == null || part.trim().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)){
-				em.setAge(-1);
+			if( part == null || part.trim().equalsIgnoreCase(Constants.COMMAND_NOCHANGE)
+					|| part.trim().equals("")){
+				em.setAge(Constants.AGE_NOT_SET);
 				r = true;
 			}else{
 				String [] keyvalue = part.split("=");
 				if( keyvalue.length == 1 ){
 					em.setAge(convertAge(part.trim()));
-					if( em.getAge() == -2 ){
+					if( em.getAge() == Constants.AGE_PARSE_ERROR ){
 						r = false;
 					}else{
 						r = true;
 					}
 				}else if( keyvalue.length ==2 && keyvalue[0].equals(Constants.SEARCH_KEY_AGE)){
 					em.setAge(convertAge(keyvalue[1].trim()));
-					if( em.getAge() == -2 ){
+					if( em.getAge() == Constants.AGE_PARSE_ERROR ){
 						r = false;
 					}else{
 						r = true;
@@ -136,18 +139,21 @@ public class OperatorCommandCheck {
 		return r;
 	}
 	
+	/**
+	 * if age is not set, its value will be -1, if any parse error, its value will be -2
+	 */
 	private static int convertAge(String age){
 		try{
 			if( age == null || "".equals(age.trim())){
-				return -1;
+				return Constants.AGE_NOT_SET;
 			}
 			int r = Integer.parseInt(age);
-			if( r <= 0 ){
-				return -2;
+			if( r < 0 ){
+				return Constants.AGE_PARSE_ERROR;
 			}
 			return r ;
 		}catch(NumberFormatException nfe){
-			return -2;
+			return Constants.AGE_PARSE_ERROR;
 		}
 	}
 
