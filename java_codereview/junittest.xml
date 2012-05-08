@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<employees>
+  <employee>
+    <id>12340</id>
+    <name>testuser0</name>
+    <superiorid />
+    <age>20</age>
+  </employee>
+  <employee>
+    <id>12341</id>
+    <name>testuser1</name>
+    <superiorid />
+    <age>21</age>
+  </employee>
+  <employee>
+    <id>12342</id>
+    <name>testuser2</name>
+    <superiorid />
+    <age>22</age>
+  </employee>
+  <employee>
+    <id>12343</id>
+    <name>testuser3</name>
+    <superiorid />
+    <age>23</age>
+  </employee>
+  <employee>
+    <id>12344</id>
+    <name>testuser4</name>
+    <superiorid />
+    <age>24</age>
+  </employee>
+  <employee>
+    <id>12345</id>
+    <name>keepcc</name>
+    <superiorid>12340</superiorid>
+    <age>40</age>
+  </employee>
+  <employee>
+    <id>12346</id>
+    <name>testuser6</name>
+    <superiorid />
+    <age>26</age>
+  </employee>
+  <employee>
+    <id>12347</id>
+    <name>testuser7</name>
+    <superiorid />
+    <age>27</age>
+  </employee>
+  <employee>
+    <id>12348</id>
+    <name>testuser8</name>
+    <superiorid />
+    <age>28</age>
+  </employee>
+  <employee>
+    <id>12349</id>
+    <name>testuser9</name>
+    <superiorid />
+    <age>29</age>
+  </employee>
+  <employee>
+    <id>10001</id>
+    <name>keepcc</name>
+    <superiorid>12340</superiorid>
+    <age>40</age>
+  </employee>
+</employees>
