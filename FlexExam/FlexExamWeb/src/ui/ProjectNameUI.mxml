@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	  creationComplete="shape()" >
+
+	<mx:Script>
+		<![CDATA[
+			import mx.core.UIComponent;
+			import entity.ProjectStatus;
+			import ui.StatusIcon;
+		
+			[Bindable]
+			public var ProjectStatus:String = "";
+			
+			[Bindable]
+			public var ProjectName:String = "ProjectName";
+			
+			function shape():void
+			{
+				var myicon:StatusIcon = new StatusIcon();
+				myicon.Key = ProjectStatus;
+				myicon.height = this.height;
+				myicon.width = this.height;
+				var uic:UIComponent = new UIComponent();
+				uic.addChild(myicon);
+//				uic.height= this.height;
+//				uic.width = this.width * 0.4;
+				this.addChild(uic);
+				
+			}
+			
+			
+		]]>
+	</mx:Script>
+	
+	
+		
+	
+	
+	<mx:Label text="{ProjectName}" height="100%"  tabIndex="2" />
+		
+	
+</mx:HBox>

@@ -47,6 +47,8 @@ public class DAO {
 				list.add(cl);
 				
 			}
+			rs.close();
+			st.close();
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
@@ -67,6 +69,8 @@ public class DAO {
 				list.add(cl);
 				
 			}
+			rs.close();
+			st.close();
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
@@ -89,6 +93,8 @@ public class DAO {
 				list.add(cl);
 				
 			}
+			rs.close();
+			st.close();
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
@@ -109,10 +115,63 @@ public class DAO {
 				list.add(cl);
 				
 			}
+			rs.close();
+			st.close();
 		}catch(Exception e){
 			throw new RuntimeException(e);
 		}
 		return list;
+	}
+	
+	public Client getClientById(String cid){
+		String sql = "select * from clients where id = '" + cid + "'";
+		Client client = null;
+		try{
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(sql);
+			if( rs.next() ){
+				 client = new Client();
+				client.setId(rs.getString("id"));
+				client.setName(rs.getString("name"));
+			}
+			rs.close();
+			st.close();
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+		return client;
+	}
+	
+	public List<Employee> getEmployee4Project(String pid){
+		String sql = "select * from employees, project_employee_map "
+			+ " where employee = id "
+			+ " and project = '" + pid + "'";
+		List<Employee> list = new ArrayList<Employee>();
+		try{
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(sql);
+			while( rs.next() ){
+				Employee em = new Employee();
+				em.setId(rs.getString("id"));
+				em.setName(rs.getString("name"));
+				em.setStatus(rs.getString("status"));
+				list.add(em);
+			}
+			rs.close();
+			st.close();
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
+		return list;
+	}
+	
+	
+	public void close(){
+		try{
+			this.conn.close();
+		}catch(Exception e){
+			throw new RuntimeException(e);
+		}
 	}
 
 }

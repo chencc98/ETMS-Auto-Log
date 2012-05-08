@@ -19,4 +19,54 @@
     <servlet-name>AllData</servlet-name>
     <url-pattern>/AllData</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AllClients</display-name>
+    <servlet-name>AllClients</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.AllClients</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AllClients</servlet-name>
+    <url-pattern>/AllClients</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AllEmployees</display-name>
+    <servlet-name>AllEmployees</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.AllEmployees</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AllEmployees</servlet-name>
+    <url-pattern>/AllEmployees</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AllProjects</display-name>
+    <servlet-name>AllProjects</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.AllProjects</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AllProjects</servlet-name>
+    <url-pattern>/AllProjects</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AllPEMap</display-name>
+    <servlet-name>AllPEMap</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.AllPEMap</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AllPEMap</servlet-name>
+    <url-pattern>/AllPEMap</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>MainDataGrid</display-name>
+    <servlet-name>MainDataGrid</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.MainDataGrid</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MainDataGrid</servlet-name>
+    <url-pattern>/MainDataGrid</url-pattern>
+  </servlet-mapping>
 </web-app>

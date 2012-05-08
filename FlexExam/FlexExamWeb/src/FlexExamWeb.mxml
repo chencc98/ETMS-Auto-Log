@@ -1,11 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	xmlns:myui="ui.*"
+	  creationComplete="init()" >
+	 <mx:HTTPService url="http://localhost:8080/FlexExamDataService/MainDataGrid" 
+	 	 showBusyCursor="true" id="httpservice" resultFormat="xml"
+	 	  result="getResult(event)" fault="getFault(event)"/>
+	 	
+	 
+	 <mx:Script>
+	 	<![CDATA[
+	 		import mx.core.IFlexDisplayObject;
+	 		import mx.collections.ArrayCollection;
+	 		import mx.rpc.events.FaultEvent;
+	 		import mx.rpc.events.ResultEvent;
+	 		import entity.MainDataGridModel;
+	 		import mx.controls.Alert;
+	 		import entity.ProjectStatus;
+	 		import mx.managers.PopUpManager;
+	 		import ui.ProjectDetail;
+	 		
+	 		[Bindable]
+	 		public var maindata:XMLList;
+	 	
+	 		public  function init():void
+	 		{
+	 			httpservice.send();
+	 			
+	 		}
+	 		
+	 		private function getResult(event:ResultEvent):void
+	 		{
+	 			var xmlresult:XML = XML(event.result);
+	 			maindata =  xmlresult.children();
+	 		}
+	 		
+	 		private function getFault(event:FaultEvent):void
+	 		{
+	 			Alert.show("Error when fetch data with " + event.fault.faultDetail);
+	 		}
+	 		
+	 		
+	 		
+	 	]]>
+	 </mx:Script>
 	<mx:Panel x="0" y="0" width="100%" height="100%" layout="absolute" title="Project List">
-		<mx:DataGrid x="0" y="0" width="100%" height="100%">
+		<mx:DataGrid x="0" y="0" width="100%" height="100%"
+			 dataProvider="{maindata}">
 			<mx:columns>
-				<mx:DataGridColumn headerText="Column 1" dataField="col1"/>
-				<mx:DataGridColumn headerText="Column 2" dataField="col2"/>
-				<mx:DataGridColumn headerText="Column 3" dataField="col3"/>
+				<mx:DataGridColumn headerText="Name"    
+					 >
+					<mx:itemRenderer>
+						<mx:Component>
+								<myui:ProjectNameUI ProjectName="{data.name}"
+									 ProjectStatus="{data.status}">
+								</myui:ProjectNameUI>
+						</mx:Component>
+					</mx:itemRenderer>	 
+				</mx:DataGridColumn>
+				<mx:DataGridColumn headerText="ID" dataField="id"/>
+				<mx:DataGridColumn headerText="Status" dataField="status"/>
+				<mx:DataGridColumn headerText="Progress(%)" dataField="progress"
+					 sortable="false"/>
+				<mx:DataGridColumn headerText="Client" dataField="client"/>
+				<mx:DataGridColumn headerText="Employee" dataField="employee"
+					 sortable="false"/>
+				<mx:DataGridColumn headerText="Detail"   >
+					<mx:itemRenderer>
+						<mx:Component>
+							
+							<mx:Label text="Detail" click="openDetail(event,data)"   >
+								<mx:Script>
+									<![CDATA[
+										import mx.managers.PopUpManager;
+										import ui.ProjectDetail;
+										import mx.core.IFlexDisplayObject;
+										//open a pop-up to see the detail
+								 		public function openDetail(event:MouseEvent, data:Object):void
+								 		{
+								 			var Mypopup:ProjectDetail = PopUpManager.createPopUp(this, ProjectDetail,true) as ProjectDetail;
+								 			Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
+								 			Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
+								 			Mypopup.projectid.text  = data.child("id").text();
+								 			Mypopup.projectname.text = data.child("name").text();
+								 			Mypopup.client.text = data.client;
+								 			Mypopup.projectstatus.text = data.status;
+								 			Mypopup.progress.text = data.progress;
+								 		}
+									]]>
+								</mx:Script>
+							</mx:Label>
+						</mx:Component>
+						
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
 			</mx:columns>
 		</mx:DataGrid>
 	</mx:Panel>

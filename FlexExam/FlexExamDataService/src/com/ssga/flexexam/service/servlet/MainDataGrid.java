@@ -12,12 +12,11 @@ import com.ssga.flexexam.service.dao.DAO;
 import com.ssga.flexexam.service.entity.Client;
 import com.ssga.flexexam.service.entity.Employee;
 import com.ssga.flexexam.service.entity.Project;
-import com.ssga.flexexam.service.entity.ProjectEmployeeMap;
 
 /**
- * Servlet implementation class AllData
+ * Servlet implementation class MainDataGrid
  */
-public class AllData extends HttpServlet {
+public class MainDataGrid extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -26,26 +25,29 @@ public class AllData extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String out = "<data>" + "\n";
 		DAO dao = new DAO();
-		List<Client> listc = dao.getAllClients();
-		for( Client cl : listc ){
-			out += cl.toXMLString() + "\n";
-		}
-		
-		List<Employee> liste = dao.getAllEmployees();
-		for( Employee cl : liste ){
-			out += cl.toXMLString() + "\n";
-		}
-		
+			
 		List<Project> listp = dao.getAllProjects();
 		for( Project cl : listp ){
-			out += cl.toXMLString() + "\n";
+			out += "<project>";
+			out += "<id>" + cl.getId() + "</id>";
+			out += "<name>" + cl.getName() + "</name>";
+			out += "<progress>" + cl.getProgress() + "</progress>";
+			out += "<status>" + cl.getStatus() + "</status>";
+			Client client = dao.getClientById(cl.getClient());
+			out += "<client>" + client.getName() + "</client>";
+			
+			List<Employee> list = dao.getEmployee4Project(cl.getId());
+			String employeelist = "";
+			for ( Employee em : list){
+				employeelist += em.getName() + ",";
+			}
+			employeelist = employeelist.endsWith(",") ? employeelist.substring(0, employeelist.length()-1)
+					: employeelist;
+			out += "<employee>" + employeelist + "</employee>";
+			out += "</project>" + "\n";
 		}
 		
-		List<ProjectEmployeeMap> listm = dao.getAllPEMap();
-		for( ProjectEmployeeMap cl : listm ){
-			out += cl.toXMLString() + "\n";
-		}
-		
+				
 		out += "</data>";
 		response.getWriter().write(out);
 		
@@ -56,7 +58,7 @@ public class AllData extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		doGet(request,response);
+		doGet(request, response);
 	}
 
 }

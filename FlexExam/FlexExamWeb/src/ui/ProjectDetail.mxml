@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="522" height="456" title="Project Detail" showCloseButton="true"
+	 creationComplete="init();">
+
+	<mx:Script>
+		<![CDATA[
+		
+			import mx.managers.PopUpManager;
+			
+			
+			private function init():void
+			{
+				this.addEventListener(Event.CLOSE, closehandler);
+			}
+			
+			
+			private function closehandler(event:Event):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:Label x="10" y="10" text="ID:" width="45" height="17" textAlign="right"/>
+	<mx:Label x="66" y="10" width="76" id="projectid"/>
+	<mx:Label x="164" y="10" text="Name:" textAlign="right"/>
+	<mx:Label x="214" y="10" width="76" id="projectname"/>
+	<mx:Label x="321" y="10" text="Client:"/>
+	<mx:Label x="371" y="10" width="87" id="client"/>
+	<mx:Label x="10" y="35" text="Status:" textAlign="right"/>
+	<mx:Label x="66" y="35" width="76" id="projectstatus"/>
+	<mx:Label x="150" y="35" text="Progress:" textAlign="right"/>
+	<mx:TextInput x="216" y="33" width="76" id="progress" enabled="false"/>
+	<mx:Label x="296" y="35" text="%"/>
+	<mx:DataGrid x="10" width="421" bottom="60" top="73">
+		<mx:columns>
+			<mx:DataGridColumn headerText="ID" dataField="col1"/>
+			<mx:DataGridColumn headerText="Name" dataField="col2"/>
+			<mx:DataGridColumn headerText="Status" dataField="col3"/>
+		</mx:columns>
+	</mx:DataGrid>
+	<mx:Button x="10" label="Edit" bottom="20"/>
+	<mx:Button x="66" label="Close" bottom="20"/>
+	<mx:Button x="439" y="101" label="Del" width="53" enabled="false"/>
+	<mx:Button x="439" y="131" label="Add" width="53" enabled="false"/>
+	
+</mx:TitleWindow>
