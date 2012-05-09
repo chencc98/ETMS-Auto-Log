@@ -19,7 +19,6 @@ public class Delete implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
 	 */
-	@Override
 	public String getHeadMsg() {
 		return Constants.getOperatorDeleteHeadMsg();
 	}
@@ -34,7 +33,6 @@ public class Delete implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
-	@Override
 	public String operate(String command) throws OperatorException {
 		// check the command syntax, only support employee id 
 		Employee em = OperatorCommandCheck.checkCommand(command);

@@ -3,7 +3,6 @@ package com.ssga.javacodereview.model;
 import static org.junit.Assert.*;
 
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.List;

@@ -25,7 +25,6 @@ public class Update implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
 	 */
-	@Override
 	public String getHeadMsg() {
 		return Constants.getOperatorUpdateHeadMsg();
 	}
@@ -33,7 +32,6 @@ public class Update implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHelpTips()
 	 */
-	@Override
 	public String getHelpTips() {
 		return Constants.getOperatorUpdateHelpMsg();
 	}
@@ -41,7 +39,6 @@ public class Update implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
-	@Override
 	public String operate(String command) throws OperatorException {
 		Employee em = OperatorCommandCheck.checkCommand(command);
 		if( em == null ){

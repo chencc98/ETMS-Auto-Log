@@ -24,7 +24,6 @@ public class Search implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
 	 */
-	@Override
 	public String getHeadMsg() {
 		// TODO Auto-generated method stub
 		return Constants.getOperatorSearchHeadMsg();
@@ -33,7 +32,6 @@ public class Search implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHelpTips()
 	 */
-	@Override
 	public String getHelpTips() {
 		return Constants.getOperatorSearchHelpMsg();
 	}
@@ -41,7 +39,6 @@ public class Search implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
-	@Override
 	public String operate(String command) throws OperatorException {
 		// check the synctax
 		Employee em = OperatorCommandCheck.checkCommand(command);

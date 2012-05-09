@@ -20,7 +20,6 @@ public class Insert implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHeadMsg()
 	 */
-	@Override
 	public String getHeadMsg() {
 		return Constants.getOperatorInsertHeadMsg();
 	}
@@ -28,7 +27,6 @@ public class Insert implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#getHelpTips()
 	 */
-	@Override
 	public String getHelpTips() {
 		return Constants.getOperatorInsertHelpMsg();
 	}
@@ -36,7 +34,6 @@ public class Insert implements IOperator {
 	/* (non-Javadoc)
 	 * @see com.ssga.javacodereview.controller.IOperator#operate()
 	 */
-	@Override
 	public String operate(String command) throws OperatorException {
 		// check the command syntax
 		Employee em = OperatorCommandCheck.checkCommand(command);
