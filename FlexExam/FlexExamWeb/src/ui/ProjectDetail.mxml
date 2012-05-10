@@ -1,16 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="522" height="456" title="Project Detail" showCloseButton="true"
-	 creationComplete="init();">
-
+	 creationComplete="init();" xmlns:ui="ui.*">
+	 <mx:HTTPService  
+	 	 showBusyCursor="true" id="httpservice_getem" resultFormat="xml"
+	 	  result="getEmployeeResult(event)" fault="getEmployeeFault(event)"/>
+	<mx:HTTPService showBusyCursor="true" id="httpservice_edit"  resultFormat="text"
+	 	  result="EditResult(event)" fault="EditFault(event)"/>
+	
+	<!-- below the validator to validate the progress input -->
+	<mx:NumberValidator allowNegative="false" domain="int" minValue="0" maxValue="100"
+	 source="{progress}" property="text" />
 	<mx:Script>
 		<![CDATA[
-		
+			import entity.Employee;
+			import utils.EmployeeEvent;
+			import utils.DateRandom;
+			import utils.MyEvent;
+			import mx.collections.XMLListCollection;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.controls.Alert;
 			import mx.managers.PopUpManager;
 			
+			[Bindable]
+			public var employeelist:XMLListCollection;
+			
+			
+			public var employeeIDlist:String = "";
 			
 			private function init():void
 			{
 				this.addEventListener(Event.CLOSE, closehandler);
+				closebutton.addEventListener(MouseEvent.CLICK, closehandler);
+				editbutton.addEventListener(MouseEvent.CLICK,edithandler);
+				delem.addEventListener(MouseEvent.CLICK, delem_handler);
+				addem.addEventListener(MouseEvent.CLICK, addem_handler);
+			}
+			
+			
+			private function delem_handler(event:MouseEvent):void
+			{
+				if( employeeDG.selectedIndex < 0 ) {
+					Alert.show("No Employee selected");
+				}else{
+					employeelist.removeItemAt(employeeDG.selectedIndex);
+				}
+			}
+			
+			private function addem_handler(event:MouseEvent):void
+			{
+				var employeeselector:EmployeeSelector = PopUpManager.createPopUp(this,EmployeeSelector,true) as EmployeeSelector;
+				PopUpManager.centerPopUp(employeeselector);
+				employeeselector.addEventListener("EmployeeEvent", insertEmployee);
+				employeeselector.loadEmployee();
+			}
+			
+			private function insertEmployee(event:EmployeeEvent):void
+			{
+				var em:Employee = event.Employ;
+				//search the dataprovider, if the employee exist, ignore
+				var len:Number = employeelist.length;
+				for( var i:Number=0; i< len; i++){
+					if( employeelist[i].id == em.employeeid ){
+						Alert.show("Existing Employee [" + em.employeename + "] detected, ignore!");
+						return;
+					}
+				}
+				
+				//add this employee data into data provider
+				var xml:XMLList = new XMLList(em.toXMLFormat);
+				employeelist.addItem(xml);
+				
 			}
 			
 			
@@ -18,6 +78,82 @@
 			{
 				PopUpManager.removePopUp(this);
 			}
+			
+			private function edithandler(event:MouseEvent):void
+			{
+				if(editbutton.label == "Edit" ){
+					progress.editable = true;
+					progress.enabled = true;
+					addem.enabled = true;
+					delem.enabled = true;
+					editbutton.label = "Submit";
+				}else{
+		 			//get the employee id list as xxxx,xxxx,xxx   and then transfer to remote
+		 			employeeIDlist = "";
+		 			var len:Number = employeelist.length;
+		 			var i:Number = 0;
+		 			for( i = 0; i< len ; i++){
+		 				employeeIDlist += employeelist[i].id;
+		 				if( i != (len -1) ){
+		 					employeeIDlist += ",";
+		 				}
+		 			}
+					
+					
+					var url:String = "http://localhost:8080/FlexExamDataService/EditProject?"
+						+ "projectid=" + projectid.text + "&progress=" + progress.text
+						+ "&employees=" + employeeIDlist + "&t=" + utils.DateRandom.generate();
+					httpservice_edit.url = url;
+					httpservice_edit.send();
+				}
+			}
+			//update the project to handle the http
+			private function EditFault(event:FaultEvent):void
+			{
+				Alert.show("Error when update Project with " + event.fault.faultDetail);
+				this.dispatchEvent(new MyEvent("MyEvent") );
+				PopUpManager.removePopUp(this);
+				
+			}
+			private function EditResult(event:ResultEvent):void
+			{
+				var re:String = event.result as String;
+				Alert.show(re);
+				this.dispatchEvent(new MyEvent("MyEvent") );
+				PopUpManager.removePopUp(this);
+				
+			}
+			
+			
+			
+			//load the employee from remote, this's called by the parent to init
+			public function loadEmployee():void
+			{
+				var url:String ="http://localhost:8080/FlexExamDataService/AllEmployeesInProject?projectid=";
+				httpservice_getem.url = url + projectid.text + "&t=" + utils.DateRandom.generate();
+				httpservice_getem.send();
+			}
+			//handle getemployee http 
+			private function getEmployeeFault( event:FaultEvent ):void
+			{
+				Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
+				PopUpManager.removePopUp(this);
+			}
+			private function getEmployeeResult(event:ResultEvent):void
+			{
+				var xmlresult:XML = XML(event.result);
+	 			employeelist =  new XMLListCollection ( xmlresult.children() );
+	 			
+//	 			var len:Number = employeelist.length;
+//	 			var i:Number = 0;
+//	 			for( i = 0; i< len ; i++){
+//	 				employeeIDlist += employeelist[i].id;
+//	 				if( i != (len -1) ){
+//	 					employeeIDlist += ",";
+//	 				}
+//	 			}
+			}
+			
 		]]>
 	</mx:Script>
 	<mx:Label x="10" y="10" text="ID:" width="45" height="17" textAlign="right"/>
@@ -31,16 +167,22 @@
 	<mx:Label x="150" y="35" text="Progress:" textAlign="right"/>
 	<mx:TextInput x="216" y="33" width="76" id="progress" enabled="false"/>
 	<mx:Label x="296" y="35" text="%"/>
-	<mx:DataGrid x="10" width="421" bottom="60" top="73">
+	<mx:DataGrid  id="employeeDG" x="10" width="421" bottom="60" top="73" dataProvider="{employeelist}">
 		<mx:columns>
-			<mx:DataGridColumn headerText="ID" dataField="col1"/>
-			<mx:DataGridColumn headerText="Name" dataField="col2"/>
-			<mx:DataGridColumn headerText="Status" dataField="col3"/>
+			<mx:DataGridColumn headerText="ID" dataField="id"/>
+			<mx:DataGridColumn headerText="Name" dataField="name"/>
+			<mx:DataGridColumn headerText="Status" >
+				<mx:itemRenderer>
+					<mx:Component>
+						<ui:EmployeeIcon />
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
 		</mx:columns>
 	</mx:DataGrid>
-	<mx:Button x="10" label="Edit" bottom="20"/>
-	<mx:Button x="66" label="Close" bottom="20"/>
-	<mx:Button x="439" y="101" label="Del" width="53" enabled="false"/>
-	<mx:Button x="439" y="131" label="Add" width="53" enabled="false"/>
+	<mx:Button x="10" label="Edit" bottom="20" id="editbutton"/>
+	<mx:Button x="96" label="Close" bottom="20" id="closebutton"/>
+	<mx:Button x="439" y="101" label="Del" width="53" enabled="false" id="delem"/>
+	<mx:Button x="439" y="131" label="Add" width="53" enabled="false" id="addem"/>
 	
 </mx:TitleWindow>

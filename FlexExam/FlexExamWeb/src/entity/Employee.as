@@ -15,10 +15,10 @@ package entity
 			employeestatus = EmployeeStatus.DEFAULT;
 		}
 		
-		public function Employee(id:String, name:String, status:String){
-			employeeid = id;
-			employeename = name;
-			employeestatus = status;
+		public function get toXMLFormat():String{
+			return "<employee><id>"+employeeid + "</id><name>"
+				+ employeename + "</name><status>" + employeestatus
+				+ "</status></employee>";
 		}
 		
 		

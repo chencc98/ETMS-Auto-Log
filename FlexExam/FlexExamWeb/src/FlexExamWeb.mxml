@@ -1,58 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
-	xmlns:myui="ui.*"
+	xmlns:myui="ui.*" 
 	  creationComplete="init()" >
-	 <mx:HTTPService url="http://localhost:8080/FlexExamDataService/MainDataGrid" 
+	 <mx:HTTPService 
 	 	 showBusyCursor="true" id="httpservice" resultFormat="xml"
 	 	  result="getResult(event)" fault="getFault(event)"/>
-	 	
+	 
 	 
 	 <mx:Script>
 	 	<![CDATA[
+	 		import utils.DateRandom;
+	 		import utils.MyEvent;
+	 		
+	 		import mx.collections.XMLListCollection;
 	 		import mx.core.IFlexDisplayObject;
-	 		import mx.collections.ArrayCollection;
+	 		
 	 		import mx.rpc.events.FaultEvent;
 	 		import mx.rpc.events.ResultEvent;
-	 		import entity.MainDataGridModel;
+	 		
 	 		import mx.controls.Alert;
 	 		import entity.ProjectStatus;
 	 		import mx.managers.PopUpManager;
 	 		import ui.ProjectDetail;
 	 		
+	 		 
+	 	//below bindable collection is for main datagrid	
 	 		[Bindable]
-	 		public var maindata:XMLList;
+	 		public var maindata:XMLListCollection = new XMLListCollection();
 	 	
-	 		public  function init():void
+	 		private  function init():void
 	 		{
+	 			loadMaindata();
+	 			//utils.BrowserCustomControl.register();
+	 			//this.addEventListener(MyEvent._MY_EVENT,loadMaindataW);
+	 		}
+	 		
+	 		//the event handler when we submit our change in the edit pop-up page
+	 		private function loadMaindataW(event:MyEvent):void
+	 		{
+	 			loadMaindata();
+	 		}
+	 		
+	 		public function loadMaindata():void
+	 		{
+	 			httpservice.clearResult();
+	 			var suf:String = "?t="+utils.DateRandom.generate();   
+	 			//if the url keep the same, httpservice has the cache. will not send the request
+	 			var url:String ="http://localhost:8080/FlexExamDataService/MainDataGrid" 
+	 			httpservice.url = url + suf;
 	 			httpservice.send();
 	 			
 	 		}
-	 		
+	 		//result handler for loading the project info
 	 		private function getResult(event:ResultEvent):void
 	 		{
 	 			var xmlresult:XML = XML(event.result);
-	 			maindata =  xmlresult.children();
+	 			maindata  = new XMLListCollection(  xmlresult.children() );
 	 		}
-	 		
+	 		//failure handler for loading the project info
 	 		private function getFault(event:FaultEvent):void
 	 		{
 	 			Alert.show("Error when fetch data with " + event.fault.faultDetail);
+	 			maindata.removeAll();
+	 			
 	 		}
 	 		
+	 		//open a pop-up to see the detail
+	 		public function openDetail(event:MouseEvent, data:Object):void
+	 		{
+	 			var Mypopup:ProjectDetail = PopUpManager.createPopUp(this, ProjectDetail,true) as ProjectDetail;
+	 			//Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
+	 			//Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
+	 			PopUpManager.centerPopUp(Mypopup);
+	 			Mypopup.projectid.text  = data.child("id").text();
+	 			Mypopup.projectname.text = data.child("name").text();
+	 			Mypopup.client.text = data.client;
+	 			Mypopup.projectstatus.text = data.status;
+	 			Mypopup.progress.text = data.progress;
+	 			Mypopup.progress.enabled = false;
+	 			Mypopup.addem.enabled = false;
+	 			Mypopup.delem.enabled = false;
+	 			Mypopup.editbutton.label = "Edit";
+	 			
+	 			//if the project is complete, edit is not allowed
+	 			if( data.status == ProjectStatus.COMPLETE ){
+	 				Mypopup.editbutton.enabled = false;
+	 			}
+	 			
+	 			//as the initial step, load the employees under this project
+	 			Mypopup.loadEmployee();
+	 			
+	 			//add event lister, after submit, we will load the project info again
+	 			Mypopup.addEventListener("MyEvent", loadMaindataW);
+	 		}
 	 		
 	 		
 	 	]]>
 	 </mx:Script>
 	<mx:Panel x="0" y="0" width="100%" height="100%" layout="absolute" title="Project List">
 		<mx:DataGrid x="0" y="0" width="100%" height="100%"
-			 dataProvider="{maindata}">
+			 dataProvider="{maindata}" id="maindg">
 			<mx:columns>
 				<mx:DataGridColumn headerText="Name"    
 					 >
 					<mx:itemRenderer>
 						<mx:Component>
-								<myui:ProjectNameUI ProjectName="{data.name}"
-									 ProjectStatus="{data.status}">
+								<myui:ProjectNameUI >
+		<!--							ProjectName="{data.name}"
+									 ProjectStatus="{data.status}"> 
+				-->
 								</myui:ProjectNameUI>
 						</mx:Component>
 					</mx:itemRenderer>	 
@@ -68,26 +124,8 @@
 					<mx:itemRenderer>
 						<mx:Component>
 							
-							<mx:Label text="Detail" click="openDetail(event,data)"   >
-								<mx:Script>
-									<![CDATA[
-										import mx.managers.PopUpManager;
-										import ui.ProjectDetail;
-										import mx.core.IFlexDisplayObject;
-										//open a pop-up to see the detail
-								 		public function openDetail(event:MouseEvent, data:Object):void
-								 		{
-								 			var Mypopup:ProjectDetail = PopUpManager.createPopUp(this, ProjectDetail,true) as ProjectDetail;
-								 			Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
-								 			Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
-								 			Mypopup.projectid.text  = data.child("id").text();
-								 			Mypopup.projectname.text = data.child("name").text();
-								 			Mypopup.client.text = data.client;
-								 			Mypopup.projectstatus.text = data.status;
-								 			Mypopup.progress.text = data.progress;
-								 		}
-									]]>
-								</mx:Script>
+							<mx:Label text="Detail" click="outerDocument.openDetail(event,data)"   >
+								
 							</mx:Label>
 						</mx:Component>
 						

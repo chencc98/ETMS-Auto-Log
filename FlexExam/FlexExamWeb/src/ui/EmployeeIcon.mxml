@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			
+			
+			
+		
+			[Bindable]
+			public var EmployeeStatus:String = "";
+			
+			
+			
+			
+			
+			override public function set data(oItem:Object):void
+			{
+				EmployeeStatus = oItem.status;
+				//show the employee status icon according to its status
+				myicon.source = "assets/EMPLOYEE" + EmployeeStatus + ".jpg";
+				
+				
+			}
+			
+			
+		]]>
+	</mx:Script>
+	<mx:Image id="myicon" height="20" width="20">
+			
+		</mx:Image>
+	<mx:Label text="{EmployeeStatus}">
+		
+	</mx:Label>
+</mx:HBox>
