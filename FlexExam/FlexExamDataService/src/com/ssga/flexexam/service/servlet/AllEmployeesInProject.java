@@ -10,13 +10,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ssga.flexexam.service.dao.DAO;
 import com.ssga.flexexam.service.entity.Employee;
-import com.ssga.flexexam.service.entity.Project;
-import com.ssga.flexexam.service.entity.ProjectStatus;
 
 /**
- * Servlet implementation class AllEmployees
+ * Servlet implementation class AllEmployeesInProject
  */
-public class AllEmployees extends HttpServlet {
+public class AllEmployeesInProject extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -24,16 +22,11 @@ public class AllEmployees extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String out = "<employees>";
+		String pid = request.getParameter("projectid");
 		DAO dao = new DAO();
-		List<Employee> liste = dao.getAllEmployees();
+		List<Employee> liste = dao.getEmployee4Project(pid);
 		for( Employee cl : liste ){
-			out += "<employee>" + "<id>" + cl.getId() + "</id>";
-			out += "<name>" + cl.getName() + "</name>";
-			out += "<status>" + cl.getStatus() + "</status>";
-			List<Project> list = dao.getProjectsForEmployee(cl.getId());
-			out += "<ongoing>" + getProjectString(ProjectStatus.ONGOING, list) + "</ongoing>";
-			out += "<complete>" + getProjectString(ProjectStatus.COMPLETE, list)
-				+ "</complete></employee> \n";
+			out += cl.toXMLString() + "\n";
 		}
 		
 		out += "</employees>";
@@ -46,16 +39,6 @@ public class AllEmployees extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
-	}
-	
-	private String getProjectString(String type, List<Project> list){
-		String re = "";
-		for( Project p : list){
-			if( p.getStatus().equals(type)){
-				re += p.getName() + ",";
-			}
-		}
-		return re.endsWith(",") ? re.substring(0, re.length()-1) : re ;
 	}
 
 }

@@ -69,4 +69,24 @@
     <servlet-name>MainDataGrid</servlet-name>
     <url-pattern>/MainDataGrid</url-pattern>
   </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>AllEmployeesInProject</display-name>
+    <servlet-name>AllEmployeesInProject</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.AllEmployeesInProject</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AllEmployeesInProject</servlet-name>
+    <url-pattern>/AllEmployeesInProject</url-pattern>
+  </servlet-mapping>
+  <servlet>
+    <description></description>
+    <display-name>EditProject</display-name>
+    <servlet-name>EditProject</servlet-name>
+    <servlet-class>com.ssga.flexexam.service.servlet.EditProject</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>EditProject</servlet-name>
+    <url-pattern>/EditProject</url-pattern>
+  </servlet-mapping>
 </web-app>
