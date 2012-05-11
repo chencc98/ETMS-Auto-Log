@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="522" height="456" title="Project Detail" showCloseButton="true"
 	 creationComplete="init();" xmlns:ui="ui.*">
+	<!-- below httpservice is used to get employee info -->	
 	 <mx:HTTPService  
 	 	 showBusyCursor="true" id="httpservice_getem" resultFormat="xml"
 	 	  result="getEmployeeResult(event)" fault="getEmployeeFault(event)"/>
+	<!-- below httpservice is used to edit the project -->
 	<mx:HTTPService showBusyCursor="true" id="httpservice_edit"  resultFormat="text"
 	 	  result="EditResult(event)" fault="EditFault(event)"/>
 	
@@ -37,7 +39,7 @@
 				addem.addEventListener(MouseEvent.CLICK, addem_handler);
 			}
 			
-			
+			//the delete employee button event handler
 			private function delem_handler(event:MouseEvent):void
 			{
 				if( employeeDG.selectedIndex < 0 ) {
@@ -47,6 +49,7 @@
 				}
 			}
 			
+			//the add employee button event handler, will open employee selector ui
 			private function addem_handler(event:MouseEvent):void
 			{
 				var employeeselector:EmployeeSelector = PopUpManager.createPopUp(this,EmployeeSelector,true) as EmployeeSelector;
@@ -55,6 +58,7 @@
 				employeeselector.loadEmployee();
 			}
 			
+			//after user select a user, it will dispatch the event and here we will capture and handler
 			private function insertEmployee(event:EmployeeEvent):void
 			{
 				var em:Employee = event.Employ;
@@ -81,13 +85,14 @@
 			
 			private function edithandler(event:MouseEvent):void
 			{
+				//current mode is Edit, after click, edit is enabled
 				if(editbutton.label == "Edit" ){
 					progress.editable = true;
 					progress.enabled = true;
 					addem.enabled = true;
 					delem.enabled = true;
 					editbutton.label = "Submit";
-				}else{
+				}else{   //below mode is submit, handler submit event
 		 			//get the employee id list as xxxx,xxxx,xxx   and then transfer to remote
 		 			employeeIDlist = "";
 		 			var len:Number = employeelist.length;

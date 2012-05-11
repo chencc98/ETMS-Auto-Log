@@ -35,9 +35,10 @@
 			
 			private function selecthandler(event:MouseEvent):void
 			{
-				if( dg.selectedIndex < 0 ){
+				if( dg.selectedIndex < 0 ){   //no employee select
 					Alert.show("No Employee selected");
 				}else if(employeedata[dg.selectedIndex].status == entity.EmployeeStatus.OVERLOAD){
+					//overload employee is selected
 					Alert.show("This Employee is " + entity.EmployeeStatus.OVERLOAD);
 				}else{
 					//Alert.show(employeedata[dg.selectedIndex].id);
