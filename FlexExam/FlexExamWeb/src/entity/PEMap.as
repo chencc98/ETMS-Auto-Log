@@ -1,21 +1,17 @@
-package entity
-{
-	public class PEMap
-	{
-		public var projectid:String;
-		public var employeeid:String;
-		
-		public function PEMap()
-		{
-			projectid = "";
-			employeeid = "";
-		}
-		
-		public function PEMap(pid:String, eid:String)
-		{
-			projectid = pid;
-			employeeid = eid;
-		}
+package entity{
+    public class PEMap{
+        public var projectId:String;
+        public var employeeId:String;
 
-	}
+        public function PEMap(){
+            projectId = "";
+            employeeId = "";
+        }
+
+        public function PEMap(pid:String, eid:String){
+            projectId = pid;
+            employeeId = eid;
+        }
+
+    }
 }

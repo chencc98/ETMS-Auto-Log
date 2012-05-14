@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml" text="Detail" creationComplete="init()">
+    <mx:Script>
+        <![CDATA[
+            
+            import mx.managers.PopUpManager;
+            import entity.ProjectStatus;
+            import ui.ProjectDetail;
+            import ui.ProjectDetailWrap;
+            import utils.ProjectRefreshEvent;
+            
+            private function init():void{
+                this.addEventListener(MouseEvent.CLICK, openDetail);
+            }
+            
+
+            //open a pop-up to see the detail
+            private function openDetail(event:MouseEvent):void {
+                var projectDetail:ProjectDetail = ProjectDetailWrap.getProjectDetailUI();
+                PopUpManager.addPopUp(projectDetail, this.owner, true);
+                //Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
+                //Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
+                PopUpManager.centerPopUp(projectDetail);
+                projectDetail.projectId.text  = data.child("id").text();
+                projectDetail.projectName.text = data.child("name").text();
+                projectDetail.client.text = data.client;
+                projectDetail.projectStatus.text = data.status;
+                projectDetail.progress.text = data.progress;
+                projectDetail.progress.enabled = false;
+                projectDetail.deleteEmployee.enabled = false;
+                projectDetail.addEmployee.enabled = false;
+                projectDetail.editButton.enabled = true;
+                projectDetail.editButton.visible = true;
+                projectDetail.submitButton.enabled = false;
+                projectDetail.submitButton.visible = false;
+                
+                //if the project is complete, edit is not allowed
+                if (data.status == ProjectStatus.COMPLETE) {
+                    projectDetail.editButton.enabled = false;
+                }
+                
+                //as the initial step, load the employees under this project
+                projectDetail.loadEmployee();
+                
+                //add event lister, after submit, we will load the project info again
+                
+                projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+            }
+            
+            private function loadMaindata(event:ProjectRefreshEvent):void{
+                this.dispatchEvent(event);
+                
+            }
+        ]]>
+    </mx:Script>
+    
+</mx:Label>

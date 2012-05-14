@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml">
+
+    <mx:Script>
+        <![CDATA[
+
+            [Bindable]
+            public var projectStatus:String = "";
+
+            [Bindable]
+            public var projectName:String = "ProjectName";
+
+
+
+
+
+            override public function set data(oItem:Object):void {
+                if (this.data == oItem) {
+                    return;
+                }
+                super.data = oItem;
+                
+                if (!oItem.hasOwnProperty("status") || !oItem.hasOwnProperty("name")) {
+                    projectStatus = "UNKNOWN";
+                    projectName = "UNKNOWN";
+                }else{
+                    projectStatus = oItem.status;
+                    //specify the icon by the project status accordingly
+                    projectStatusIcon.source = "assets/" + projectStatus + ".jpg";
+
+                    projectName = oItem.name;
+                }
+            }
+
+        ]]>
+    </mx:Script>
+    <mx:Image id="projectStatusIcon" height="20" width="20" />
+
+    <mx:Label text="{projectName}" height="100%" />
+
+</mx:HBox>
