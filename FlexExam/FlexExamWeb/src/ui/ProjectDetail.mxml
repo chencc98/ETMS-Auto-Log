@@ -27,9 +27,9 @@
             import utils.ProjectRefreshEvent;
 
             [Bindable]
-            public var employeelist:XMLListCollection;
+            private var employeelist:XMLListCollection;
 
-            public var employeeIDlist:String = "";
+            private var employeeIDlist:String = "";
 
             private function init():void{
                 this.addEventListener(Event.CLOSE, closeHandler);
@@ -52,12 +52,16 @@
             //the add employee button event handler, will open employee selector ui
             private function addEmployeeHandler(event:MouseEvent):void {
 
-                var employeeSelector:EmployeeSelector = EmployeeSelectorWrap.getEmployeeSelector(); 
+                var employeeSelector:EmployeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
+                
                 PopUpManager.addPopUp(employeeSelector, this, true);
                 PopUpManager.centerPopUp(employeeSelector);
-                employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
-                        insertEmployee);
-                employeeSelector.loadEmployee();
+                if (!employeeSelector.hasEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT)){
+                    employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
+                            insertEmployee);
+                }
+                employeeSelector.loadEmployee(); 
+                
             }
 
             //after user select a user, it will dispatch the event and here we will capture and handler
@@ -80,7 +84,13 @@
             }
 
             private function closeHandler(event:Event):void{
+                cleanEmployeeList();
                 PopUpManager.removePopUp(this);
+            }
+            
+            //before remove this popup, please invoke this to clean employee list
+            private function cleanEmployeeList():void{
+                employeelist.removeAll();
             }
 
             private function editHandler(event:MouseEvent):void{
@@ -119,14 +129,16 @@
             //update the project to handle the http
             private function EditFault(event:FaultEvent):void{
                 Alert.show("Error when update Project with " + event.fault.faultDetail);
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT));
+                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true));
+                cleanEmployeeList();
                 PopUpManager.removePopUp(this);
 
             }
             private function EditResult(event:ResultEvent):void{
                 var re:String = event.result as String;
                 Alert.show(re);
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT) );
+                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true) );
+                cleanEmployeeList();
                 PopUpManager.removePopUp(this);
 
             }

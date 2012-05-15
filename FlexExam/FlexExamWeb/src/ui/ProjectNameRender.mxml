@@ -5,10 +5,10 @@
         <![CDATA[
 
             [Bindable]
-            public var projectStatus:String = "";
+            private var projectStatus:String = "";
 
             [Bindable]
-            public var projectName:String = "ProjectName";
+            private var projectName:String = "ProjectName";
 
 
 

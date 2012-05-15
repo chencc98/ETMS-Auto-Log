@@ -4,7 +4,7 @@
         <![CDATA[
 
             [Bindable]
-            public var employeeStatus:String = "";
+            private var employeeStatus:String = "";
 
             override public function set data(oItem:Object):void {
                 if (oItem == this.data) {

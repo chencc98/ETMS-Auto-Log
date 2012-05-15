@@ -22,16 +22,18 @@
 
             //below bindable collection is for main datagrid	
             [Bindable]
-            public var maindata:XMLListCollection = new XMLListCollection();
+            private var maindata:XMLListCollection = new XMLListCollection();
 
             private function init():void{
                 loadMaindata();
-                detail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT,
+                this.addEventListener(ProjectRefreshEvent.REFRESH_EVENT,refreshHandler);
             }
 
+            private function refreshHandler(event:ProjectRefreshEvent):void{
+                loadMaindata();
+            }
 
-
-            public function loadMaindata():void{
+            private function loadMaindata():void{
                 httpServiceLoadProject.clearResult();
                 var suffix:String = "?t=" + DateRandom.generate();
 

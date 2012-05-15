@@ -21,7 +21,8 @@
                 //Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
                 //Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
                 PopUpManager.centerPopUp(projectDetail);
-                projectDetail.projectId.text  = data.child("id").text();
+                
+                projectDetail.projectId.text = data.child("id").text();
                 projectDetail.projectName.text = data.child("name").text();
                 projectDetail.client.text = data.client;
                 projectDetail.projectStatus.text = data.status;
@@ -42,15 +43,18 @@
                 //as the initial step, load the employees under this project
                 projectDetail.loadEmployee();
                 
-                //add event lister, after submit, we will load the project info again
+                if (!projectDetail.hasEventListener(ProjectRefreshEvent.REFRESH_EVENT)){
+                    projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+                }
+    
                 
-                projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
             }
             
             private function loadMaindata(event:ProjectRefreshEvent):void{
                 this.dispatchEvent(event);
-                
             }
+            
+
         ]]>
     </mx:Script>
     

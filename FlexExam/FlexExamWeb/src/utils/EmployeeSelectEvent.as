@@ -1,6 +1,7 @@
 package utils {
-    import flash.events.Event;
     import entity.Employee;
+    
+    import flash.events.Event;
 
     
 
@@ -15,6 +16,10 @@ package utils {
 
         public function get EmployeeInside():Employee{
             return employee;
+        }
+        
+        override public function clone():Event{
+            return new EmployeeSelectEvent(type, employee);
         }
 }
 }
