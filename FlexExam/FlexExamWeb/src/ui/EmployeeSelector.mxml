@@ -31,7 +31,8 @@
             }
 
             private function closeHandler(event:Event):void {
-                PopUpManager.removePopUp(this);
+                this.dispatchEvent(new EmployeeSelectEvent(EmployeeSelectEvent.EMPLOY_SELECT_EVENT, 
+                        null));
             }
 
             private function selectHandler(event:MouseEvent):void{
@@ -49,13 +50,13 @@
                     var selectEvent:EmployeeSelectEvent = new EmployeeSelectEvent(
                             EmployeeSelectEvent.EMPLOY_SELECT_EVENT,employee);
                     this.dispatchEvent(selectEvent);
-                    PopUpManager.removePopUp(this);
+//                    PopUpManager.removePopUp(this);
                 }
             }
 
             //the parent will call this to load the all employee
             public function loadEmployee():void{
-                var url:String = "http://localhost:8080/FlexExamDataService/AllEmployees?t="
+                var url:String = "http://localhost:8083/FlexExamDataService/AllEmployees?t="
                         + utils.DateRandom.generate();
                 httpServiceSelect.url = url;
                 httpServiceSelect.send();
@@ -63,7 +64,9 @@
             //below are handlers to handle load employee httpservice
             private function selectFault(event:FaultEvent):void{
                 Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                PopUpManager.removePopUp(this);
+                this.dispatchEvent(new EmployeeSelectEvent(EmployeeSelectEvent.EMPLOY_SELECT_EVENT, 
+                        null));
+//                PopUpManager.removePopUp(this);
             }
 
             private function selectResult(event:ResultEvent):void{

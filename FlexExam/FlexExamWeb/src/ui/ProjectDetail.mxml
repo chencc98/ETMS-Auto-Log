@@ -30,6 +30,7 @@
             private var employeelist:XMLListCollection;
 
             private var employeeIDlist:String = "";
+            private var employeeSelector:EmployeeSelector;
 
             private function init():void{
                 this.addEventListener(Event.CLOSE, closeHandler);
@@ -52,21 +53,30 @@
             //the add employee button event handler, will open employee selector ui
             private function addEmployeeHandler(event:MouseEvent):void {
 
-                var employeeSelector:EmployeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
+                employeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
                 
                 PopUpManager.addPopUp(employeeSelector, this, true);
                 PopUpManager.centerPopUp(employeeSelector);
-                if (!employeeSelector.hasEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT)){
-                    employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
-                            insertEmployee);
-                }
+//                if (!employeeSelector.hasEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT)){
+                employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
+                        insertEmployee);
+//                }
                 employeeSelector.loadEmployee(); 
                 
+            }
+            private function closePopup():void {
+                employeeSelector.removeEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
+                        insertEmployee);
+                PopUpManager.removePopUp(employeeSelector);
             }
 
             //after user select a user, it will dispatch the event and here we will capture and handler
             private function insertEmployee(event:EmployeeSelectEvent):void{
                 var employee:Employee = event.EmployeeInside;
+                closePopup();
+                if (employee == null){
+                    return;
+                }
                 //search the dataprovider, if the employee exist, ignore
                 var len:Number = employeelist.length;
                 for( var i:Number=0; i< len; i++){
@@ -85,7 +95,9 @@
 
             private function closeHandler(event:Event):void{
                 cleanEmployeeList();
-                PopUpManager.removePopUp(this);
+                var closeevent:ProjectRefreshEvent = new ProjectRefreshEvent(
+                        ProjectRefreshEvent.REFRESH_EVENT, false, ProjectRefreshEvent.JUST_CLOSE);
+                this.dispatchEvent(closeevent);
             }
             
             //before remove this popup, please invoke this to clean employee list
@@ -119,7 +131,7 @@
                     }
                 }
 
-                var url:String = "http://localhost:8080/FlexExamDataService/EditProject?"
+                var url:String = "http://localhost:8083/FlexExamDataService/EditProject?"
                         + "projectid=" + projectId.text + "&progress=" + progress.text
                         + "&employees=" + employeeIDlist + "&t=" + DateRandom.generate();
                 httpServiceEdit.url = url;
@@ -129,24 +141,28 @@
             //update the project to handle the http
             private function EditFault(event:FaultEvent):void{
                 Alert.show("Error when update Project with " + event.fault.faultDetail);
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true));
                 cleanEmployeeList();
-                PopUpManager.removePopUp(this);
+                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true,
+                        ProjectRefreshEvent.DO_REFRESH));
+                
+//                PopUpManager.removePopUp(this);
 
             }
             private function EditResult(event:ResultEvent):void{
                 var re:String = event.result as String;
                 Alert.show(re);
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true) );
                 cleanEmployeeList();
-                PopUpManager.removePopUp(this);
+                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true,
+                        ProjectRefreshEvent.DO_REFRESH) );
+                
+//                PopUpManager.removePopUp(this);
 
             }
 
             //load the employee from remote, this's called by the parent to init
             public function loadEmployee():void{
                 var url:String = 
-                        "http://localhost:8080/FlexExamDataService/AllEmployeesInProject?projectid=";
+                        "http://localhost:8083/FlexExamDataService/AllEmployeesInProject?projectid=";
                 httpServiceEmployee.url = url + projectId.text
                         + "&t=" + DateRandom.generate();
                 httpServiceEmployee.send();
@@ -154,7 +170,9 @@
             //handle getemployee http 
             private function getEmployeeFault( event:FaultEvent ):void{
                 Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                PopUpManager.removePopUp(this);
+                var closeevent:ProjectRefreshEvent = new ProjectRefreshEvent(
+                        ProjectRefreshEvent.REFRESH_EVENT, false, ProjectRefreshEvent.JUST_CLOSE);
+                this.dispatchEvent(closeevent);
             }
             private function getEmployeeResult(event:ResultEvent):void{
                 var xmlresult:XML = XML(event.result);

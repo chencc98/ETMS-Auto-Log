@@ -21,5 +21,5 @@ package utils {
         override public function clone():Event{
             return new EmployeeSelectEvent(type, employee);
         }
-}
+    }
 }

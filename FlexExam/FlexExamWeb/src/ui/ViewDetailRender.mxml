@@ -8,6 +8,9 @@
             import ui.ProjectDetail;
             import ui.ProjectDetailWrap;
             import utils.ProjectRefreshEvent;
+            import mx.controls.Alert;
+            
+            private var projectDetail:ProjectDetail;
             
             private function init():void{
                 this.addEventListener(MouseEvent.CLICK, openDetail);
@@ -16,14 +19,14 @@
 
             //open a pop-up to see the detail
             private function openDetail(event:MouseEvent):void {
-                var projectDetail:ProjectDetail = ProjectDetailWrap.getProjectDetailUI();
+                projectDetail = ProjectDetailWrap.getProjectDetailUI();
                 PopUpManager.addPopUp(projectDetail, this.owner, true);
                 //Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
                 //Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
                 PopUpManager.centerPopUp(projectDetail);
                 
-                projectDetail.projectId.text = data.child("id").text();
-                projectDetail.projectName.text = data.child("name").text();
+                projectDetail.projectId.text = data.id;
+                projectDetail.projectName.text = data.name;
                 projectDetail.client.text = data.client;
                 projectDetail.projectStatus.text = data.status;
                 projectDetail.progress.text = data.progress;
@@ -43,18 +46,25 @@
                 //as the initial step, load the employees under this project
                 projectDetail.loadEmployee();
                 
-                if (!projectDetail.hasEventListener(ProjectRefreshEvent.REFRESH_EVENT)){
-                    projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
-                }
+//                if (!projectDetail.hasEventListener(ProjectRefreshEvent.REFRESH_EVENT)){
+                projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+//                }
     
                 
             }
             
-            private function loadMaindata(event:ProjectRefreshEvent):void{
-                this.dispatchEvent(event);
+            private function closePopup():void {
+                projectDetail.removeEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+                PopUpManager.removePopUp(projectDetail);
             }
-            
+            private function loadMaindata(event:ProjectRefreshEvent):void{
+                closePopup();
+                if (event.whatToDo == ProjectRefreshEvent.DO_REFRESH){
+                    this.dispatchEvent(event);
+                }
+            }
 
+            
         ]]>
     </mx:Script>
     

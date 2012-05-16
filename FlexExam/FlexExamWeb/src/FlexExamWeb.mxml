@@ -37,7 +37,7 @@
                 httpServiceLoadProject.clearResult();
                 var suffix:String = "?t=" + DateRandom.generate();
 
-                var url:String = "http://localhost:8080/FlexExamDataService/MainDataGrid";
+                var url:String = "http://localhost:8083/FlexExamDataService/MainDataGrid";
                 httpServiceLoadProject.url = url + suffix;
                 httpServiceLoadProject.send();
 
