@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" xmlns:ui="ui.*"
+         creationComplete="init()">
+    
+    <mx:Script>
+        <![CDATA[
+            import mx.collections.ArrayCollection;
+            
+            private function init():void{
+                gap.text = demo.getStyle("horizontalGap");
+                left.text = demo.getStyle("paddingLeft");
+                right.text = demo.getStyle("paddingRight");
+                //valign.selectedLabel = demo.getStyle("verticalAlign");
+                inputtext.text = demo.labelText;
+                demowidth.text = demo.width.toString();
+            }
+            
+            
+            private function clickHandler(event:MouseEvent):void {
+                demo.setStyle("verticalAlign",valign.selectedLabel);
+                demo.setStyle("horizontalGap",gap.text);
+                demo.setStyle("paddingLeft",left.text);
+                demo.setStyle("paddingRight",right.text);
+                demo.labelText = inputtext.text;
+                demo.imageSource = imgs.selectedLabel;
+                demo.width = new Number(demowidth.text);
+            }
+        ]]>
+    </mx:Script>
+    <mx:Array id="comboData">
+        <mx:String>top</mx:String>
+        <mx:String>middle</mx:String>
+        <mx:String>bottom</mx:String>
+    </mx:Array>
+    
+    <mx:Array id="imgsource">
+        <mx:String>assets/COMPLETE.jpg</mx:String>
+        <mx:String>assets/EMPLOYEENORMAL.jpg</mx:String>
+    </mx:Array>
+    
+               
+    <ui:IconedLabel horizontalGap="40" id="demo"
+            labelText="ooosdddddddsfdfdfdfdfdsfdsfdsfsdfdsfsdfsdfsdddd33"
+            verticalAlign="middle"  paddingLeft="10" paddingRight="10"
+             updateComplete="init()"
+            imageSource="assets/EMPLOYEENORMAL.jpg"/>  
+    <mx:HBox width="100%">
+        <mx:Label text="gap" /><mx:TextInput id="gap"/>
+        <mx:Label text="left" /><mx:TextInput id="left"/>
+        <mx:Label text="right" /><mx:TextInput id="right"/>
+        <mx:Label text="valign" /><mx:ComboBox id="valign"
+                             dataProvider="{comboData}" />
+    </mx:HBox>
+    <mx:HBox>
+        <mx:Label text="width" /><mx:TextInput id="demowidth" />
+        <mx:Label text="label" /><mx:TextArea id="inputtext" />
+        <mx:Label text="img" /><mx:ComboBox id="imgs"  dataProvider="{imgsource}" />
+                         
+                        
+                                   
+                    
+                
+    </mx:HBox>
+    <mx:HBox>
+        <mx:Button label="ok" click="clickHandler(event)" />
+    </mx:HBox>
+   
+</mx:Application>
