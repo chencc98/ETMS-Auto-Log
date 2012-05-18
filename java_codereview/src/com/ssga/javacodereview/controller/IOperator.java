@@ -11,10 +11,10 @@ import com.ssga.javacodereview.util.OperatorException;
  *
  */
 public interface IOperator {
-	
-	public String getHeadMsg();
-	public String getHelpTips();
-	public String operate(String command) throws OperatorException; 
-	public void setConnection( IMyConnection con);
+    
+    public String getHeadMsg();
+    public String getHelpTips();
+    public String operate(String command) throws OperatorException; 
+    public void setConnection( IMyConnection con);
 
 }
