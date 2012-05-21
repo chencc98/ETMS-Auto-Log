@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="840" 
+        height="830" title="Tanks" showStatusBar="false" creationComplete="init()">
+    <mx:Script>
+        <![CDATA[
+            [Bindable]
+            private var menuData:Array = [
+                    {label: "Start", type: "normal"},
+                    {label: "Select Map", type: "normal"}];
+                    
+            private function init():void{
+                this.nativeWindow.x = (Capabilities.screenResolutionX - this.nativeWindow.width)/2;
+                this.nativeWindow.y = (Capabilities.screenResolutionY - this.nativeWindow.height)/2;
+            }
+        ]]>
+    </mx:Script>
+    <mx:MenuBar x="0" y="0" height="30" width="100%" dataProvider="{menuData}">
+        
+    </mx:MenuBar>
+    
+</mx:WindowedApplication>
