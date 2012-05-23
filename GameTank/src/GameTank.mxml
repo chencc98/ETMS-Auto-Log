@@ -3,6 +3,7 @@
         height="830" title="Tanks" showStatusBar="false" creationComplete="init()">
     <mx:Script>
         <![CDATA[
+            import entity.Config;
             [Bindable]
             private var menuData:Array = [
                     {label: "Start", type: "normal"},
@@ -11,11 +12,29 @@
             private function init():void{
                 this.nativeWindow.x = (Capabilities.screenResolutionX - this.nativeWindow.width)/2;
                 this.nativeWindow.y = (Capabilities.screenResolutionY - this.nativeWindow.height)/2;
+                
+                //load the default properties
+                var file:File = File.applicationStorageDirectory.resolvePath("config").resolvePath("default.config");
+                var config:Config;
+                if (!file.exists) {
+                    config = new Config();
+                    //file.createDirectory();
+                    var fs:FileStream = new FileStream();
+                    fs.open(file, FileMode.WRITE);
+                    fs.writeObject(config);
+                    fs.close();
+                }else{
+                    var fs1:FileStream = new FileStream();
+                    fs1.open(file, FileMode.READ);
+                    fs1.position = 0;
+                    config = fs1.readObject() as Config;
+                    fs1.close();
+                }
             }
         ]]>
     </mx:Script>
-    <mx:MenuBar x="0" y="0" height="30" width="100%" dataProvider="{menuData}">
+    <mx:MenuBar x="0" y="0" height="30" width="100%" dataProvider="{menuData}" />
         
-    </mx:MenuBar>
+    <mx:Canvas x="0" y="30" width="840" height="800" backgroundColor="#859215" />
     
 </mx:WindowedApplication>

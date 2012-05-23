@@ -3,12 +3,13 @@
     <mx:Script>
         <![CDATA[
             
+            import mx.controls.Alert;
             import mx.managers.PopUpManager;
             import entity.ProjectStatus;
             import ui.ProjectDetail;
             import ui.ProjectDetailWrap;
             import utils.ProjectRefreshEvent;
-            import mx.controls.Alert;
+            import utils.PopUpCloseEvent;
             
             private var projectDetail:ProjectDetail;
             
@@ -48,20 +49,22 @@
                 
 //                if (!projectDetail.hasEventListener(ProjectRefreshEvent.REFRESH_EVENT)){
                 projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+                projectDetail.addEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopUp);
 //                }
     
                 
             }
             
-            private function closePopup():void {
+            private function closePopUp(event:PopUpCloseEvent):void {
                 projectDetail.removeEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
+                projectDetail.removeEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopUp);
                 PopUpManager.removePopUp(projectDetail);
             }
             private function loadMaindata(event:ProjectRefreshEvent):void{
-                closePopup();
-                if (event.whatToDo == ProjectRefreshEvent.DO_REFRESH){
-                    this.dispatchEvent(event);
-                }
+                closePopUp(null);
+                
+                this.dispatchEvent(event);
+                
             }
 
             

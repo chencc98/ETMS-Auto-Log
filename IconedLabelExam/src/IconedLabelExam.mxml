@@ -41,7 +41,7 @@
                
     <ui:IconedLabel horizontalGap="40" id="demo"
             labelText="ooosdddddddsfdfdfdfdfdsfdsfdsfsdfdsfsdfsdfsdddd33"
-            verticalAlign="middle"  paddingLeft="10" paddingRight="10"
+            verticalAlign="top"  paddingLeft="10" paddingRight="10"
              updateComplete="init()"
             imageSource="assets/EMPLOYEENORMAL.jpg"/>  
     <mx:HBox width="100%">

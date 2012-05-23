@@ -24,6 +24,7 @@
             import ui.EmployeeSelectorWrap;
             import utils.DateRandom;
             import utils.EmployeeSelectEvent;
+            import utils.PopUpCloseEvent;
             import utils.ProjectRefreshEvent;
 
             [Bindable]
@@ -60,20 +61,22 @@
 //                if (!employeeSelector.hasEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT)){
                 employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
                         insertEmployee);
+                employeeSelector.addEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopup);
 //                }
                 employeeSelector.loadEmployee(); 
                 
             }
-            private function closePopup():void {
+            private function closePopup(event:PopUpCloseEvent):void {
                 employeeSelector.removeEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
                         insertEmployee);
+                employeeSelector.removeEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopup);
                 PopUpManager.removePopUp(employeeSelector);
             }
 
             //after user select a user, it will dispatch the event and here we will capture and handler
             private function insertEmployee(event:EmployeeSelectEvent):void{
                 var employee:Employee = event.EmployeeInside;
-                closePopup();
+                closePopup(null);
                 if (employee == null){
                     return;
                 }
@@ -95,8 +98,8 @@
 
             private function closeHandler(event:Event):void{
                 cleanEmployeeList();
-                var closeevent:ProjectRefreshEvent = new ProjectRefreshEvent(
-                        ProjectRefreshEvent.REFRESH_EVENT, false, ProjectRefreshEvent.JUST_CLOSE);
+                var closeevent:PopUpCloseEvent = 
+                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
                 this.dispatchEvent(closeevent);
             }
             
@@ -170,8 +173,8 @@
             //handle getemployee http 
             private function getEmployeeFault( event:FaultEvent ):void{
                 Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                var closeevent:ProjectRefreshEvent = new ProjectRefreshEvent(
-                        ProjectRefreshEvent.REFRESH_EVENT, false, ProjectRefreshEvent.JUST_CLOSE);
+                var closeevent:PopUpCloseEvent = 
+                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
                 this.dispatchEvent(closeevent);
             }
             private function getEmployeeResult(event:ResultEvent):void{

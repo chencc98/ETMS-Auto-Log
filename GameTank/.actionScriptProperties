@@ -10,6 +10,7 @@
 </compiler>
 <applications>
 <application path="GameTank.mxml"/>
+<application path="MapEditor.mxml"/>
 </applications>
 <modules/>
 <buildCSSFiles/>

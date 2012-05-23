@@ -20,6 +20,7 @@
             import entity.ProjectStatus;
             import utils.DateRandom;
             import utils.EmployeeSelectEvent;
+            import utils.PopUpCloseEvent;
 
             [Bindable]
             private var employeeData:XMLListCollection;
@@ -31,8 +32,7 @@
             }
 
             private function closeHandler(event:Event):void {
-                this.dispatchEvent(new EmployeeSelectEvent(EmployeeSelectEvent.EMPLOY_SELECT_EVENT, 
-                        null));
+                this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
             }
 
             private function selectHandler(event:MouseEvent):void{
@@ -64,8 +64,7 @@
             //below are handlers to handle load employee httpservice
             private function selectFault(event:FaultEvent):void{
                 Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                this.dispatchEvent(new EmployeeSelectEvent(EmployeeSelectEvent.EMPLOY_SELECT_EVENT, 
-                        null));
+                this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
 //                PopUpManager.removePopUp(this);
             }
 
