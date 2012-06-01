@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cairngorm:ServiceLocator
+    xmlns:mx="http://www.adobe.com/2006/mxml" 
+    xmlns:cairngorm="http://www.adobe.com/2006/cairngorm">
+    <mx:Script>
+        <![CDATA[
+            [Bindable]
+            protected var endpointUrl:String = "http://localhost:8083/FlexExamDataService/messagebroker/amf";
+            
+            
+            public static const FLEX_EXAM_SERVICE:String = "FlexExamService";
+        ]]>
+    </mx:Script>
+
+    <mx:RemoteObject id="FlexExamService" destination="FlexExamServiceGateway" 
+            showBusyCursor="true" endpoint="{endpointUrl}">
+    </mx:RemoteObject>
+
+</cairngorm:ServiceLocator>

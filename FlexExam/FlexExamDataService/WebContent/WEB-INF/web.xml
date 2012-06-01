@@ -9,6 +9,48 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>AllData</welcome-file>
   </welcome-file-list>
+  <listener>
+        <listener-class>flex.messaging.HttpFlexSession</listener-class>
+    </listener>
+    <context-param>
+        <param-name>flex.class.path</param-name>
+        <param-value>/WEB-INF/flex/hotfixes,/WEB-INF/flex/jars,/WEB-INF/lib</param-value>
+    </context-param>
+  
+  <!-- MessageBroker Servlet -->
+    <servlet>
+        <display-name>MessageBrokerServlet</display-name>
+        <servlet-name>MessageBrokerServlet</servlet-name>
+        
+        <servlet-class>flex.messaging.MessageBrokerServlet</servlet-class>
+        <init-param>
+            <param-name>services.configuration.file</param-name>
+            <param-value>/WEB-INF/flex/services-config.xml</param-value>
+         </init-param>
+        <init-param>
+            <param-name>flex.write.path</param-name>
+            <param-value>/WEB-INF/flex</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MessageBrokerServlet</servlet-name>
+        <url-pattern>/messagebroker/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>FlexInternalServlet</servlet-name>
+        <servlet-class>flex.bootstrap.BootstrapServlet</servlet-class>
+        <init-param>
+            <param-name>servlet.class</param-name>
+            <param-value>flex.webtier.server.j2ee.filemanager.FileManagerServlet</param-value>
+        </init-param>
+        <load-on-startup>10</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FlexInternalServlet</servlet-name>
+        <url-pattern>/flex-internal/*</url-pattern>
+    </servlet-mapping>
   <servlet>
     <description></description>
     <display-name>AllData</display-name>

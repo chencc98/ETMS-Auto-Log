@@ -1,76 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application
         xmlns:mx="http://www.adobe.com/2006/mxml"
-        layout="vertical"
-        creationComplete="init()" >
-    <mx:HTTPService
-            showBusyCursor="true" id="httpServiceLoadProject" resultFormat="xml"
-            result="loadProjectResult(event)" fault="loadProjectFault(event)"/>
+        xmlns:control="control.*"
+        xmlns:view="ui.*"
+        xmlns:business="business.*"
+        layout="vertical">
 
 
-    <mx:Script>
-        <![CDATA[
-            
-            import mx.collections.XMLListCollection;
-            import mx.controls.Alert;
-            import mx.rpc.events.FaultEvent;
-            import mx.rpc.events.ResultEvent;
-            
-            import ui.ProjectDetail;
-            import utils.DateRandom;
-            import utils.ProjectRefreshEvent;
-
-            //below bindable collection is for main datagrid	
-            [Bindable]
-            private var maindata:XMLListCollection = new XMLListCollection();
-
-            private function init():void{
-                loadMaindata();
-                this.addEventListener(ProjectRefreshEvent.REFRESH_EVENT,refreshHandler);
-            }
-
-            private function refreshHandler(event:ProjectRefreshEvent):void{
-                loadMaindata();
-            }
-
-            private function loadMaindata():void{
-                httpServiceLoadProject.clearResult();
-                var suffix:String = "?t=" + DateRandom.generate();
-
-                var url:String = "http://localhost:8083/FlexExamDataService/MainDataGrid";
-                httpServiceLoadProject.url = url + suffix;
-                httpServiceLoadProject.send();
-
-            }
-            //result handler for loading the project info
-            private function loadProjectResult(event:ResultEvent):void{
-                var xmlResult:XML = XML(event.result);
-                maindata = new XMLListCollection(xmlResult.children());
-            }
-            //failure handler for loading the project info
-            private function loadProjectFault(event:FaultEvent):void{
-                Alert.show("Error when fetch data with " + event.fault.faultDetail);
-                maindata.removeAll();
-
-            }
-
-        ]]>
-    </mx:Script>
-
-    <mx:DataGrid width="100%" height="100%" dataProvider="{maindata}" >
-        <mx:columns>
-            <mx:DataGridColumn headerText="Name" itemRenderer="ui.ProjectNameRender" />
-            <mx:DataGridColumn headerText="ID" dataField="id"/>
-            <mx:DataGridColumn headerText="Status" dataField="status"/>
-            <mx:DataGridColumn headerText="Progress(%)" dataField="progress"
-                sortable="false"/>
-            <mx:DataGridColumn headerText="Client" dataField="client"/>
-            <mx:DataGridColumn headerText="Employee" dataField="employee"
-                sortable="false"/>
-            <mx:DataGridColumn headerText="Detail"  itemRenderer="ui.ViewDetailRender" 
-                 id="detail"/>
-        </mx:columns>
-    </mx:DataGrid>
+    
+    <business:Services id="services" />
+    <control:ExamController id="examController" />
+    <view:MainPanel />
 
 
 </mx:Application>
