@@ -1,4 +1,5 @@
 package entity{
+    import com.adobe.cairngorm.vo.ValueObject;
     
     [RemoteClass(alias="com.ssga.flexexam.service.entity.MainPanelProject")]
     public class MainPanelProject implements ValueObject{

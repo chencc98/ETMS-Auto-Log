@@ -1,12 +1,16 @@
 package model{
     import com.adobe.cairngorm.model.ModelLocator;
     
+    import pm.EmployeeSelectorPm;
     import pm.MainPanelPm;
+    import pm.ProjectDetailPm;
 
     [Bindable]
     public class ExamModelLocator implements ModelLocator{
         
         public var mainPanelPm:MainPanelPm ;
+        public var projectDetailPm:ProjectDetailPm;
+        public var employeeSelectorPm:EmployeeSelectorPm;
         
         private static var modelLocator : ExamModelLocator;
 
@@ -27,6 +31,8 @@ package model{
 
         private function initModel():void{
             mainPanelPm = new MainPanelPm();
+            projectDetailPm = new ProjectDetailPm();
+            employeeSelectorPm = new EmployeeSelectorPm();
         }
 
     }

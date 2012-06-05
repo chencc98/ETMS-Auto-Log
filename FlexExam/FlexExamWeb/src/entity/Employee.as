@@ -1,22 +1,22 @@
 package entity {
     import entity.EmployeeStatus;
     public class Employee {
-        public var employeeId:String;
-        public var employeeName:String;
+        public var id:String;
+        public var name:String;
 
-        public var employeeStatus:String;
+        public var status:String;
 
         public function Employee() {
-            employeeId = "";
-            employeeName = "";
-            employeeStatus = EmployeeStatus.DEFAULT;
+            id = "";
+            name = "";
+            status = EmployeeStatus.DEFAULT;
         }
 
         public function get toXMLFormat():String{
             return "<employee>"
-                    + "<id>" + employeeId + "</id>"
-                    + "<name>" + employeeName + "</name>"
-                    + "<status>" + employeeStatus + "</status>"
+                    + "<id>" + id + "</id>"
+                    + "<name>" + name + "</name>"
+                    + "<status>" + status + "</status>"
                     + "</employee>";
         }
 

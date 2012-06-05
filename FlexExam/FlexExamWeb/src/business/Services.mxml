@@ -5,7 +5,8 @@
     <mx:Script>
         <![CDATA[
             [Bindable]
-            protected var endpointUrl:String = "http://localhost:8083/FlexExamDataService/messagebroker/amf";
+            protected var endpointUrl:String = 
+                    "http://localhost:8083/FlexExamDataService/messagebroker/amf";
             
             
             public static const FLEX_EXAM_SERVICE:String = "FlexExamService";

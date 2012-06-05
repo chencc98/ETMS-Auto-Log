@@ -5,12 +5,13 @@ package cairngormevents{
 
     public class SimpleEvent extends CairngormEvent{
         public static const PROJECT_INIT:String = "PROJECT_INIT";
-        public function SimpleEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false){
-            super(type, bubbles, cancelable);
+        //public static const ALL_EMPLOYEE_LOAD = "ALL_EMPLOYEE_LOAD";
+        public function SimpleEvent(type:String){
+            super(type);
         }
         
         override public function clone():Event{
-            return new SimpleEvent(type, bubbles, cancelable);
+            return new SimpleEvent(type);
         }
         
     }

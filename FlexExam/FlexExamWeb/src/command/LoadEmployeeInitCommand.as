@@ -1,19 +1,19 @@
 package command{
     
     
-    import business.MainPanelInitDelegate;
+    
     
     import com.adobe.cairngorm.commands.ICommand;
     import com.adobe.cairngorm.control.CairngormEvent;
-    
-    import model.ExamModelLocator;
-    
     import mx.collections.ArrayCollection;
     import mx.controls.Alert;
-    import mx.rpc.IResponder;
     import mx.rpc.events.FaultEvent;
     import mx.rpc.events.ResultEvent;
+    import mx.rpc.IResponder;
     
+    
+    import business.MainPanelInitDelegate;
+    import model.ExamModelLocator;
     import pm.MainPanelPm;
 
     public class LoadEmployeeInitCommand implements ICommand, IResponder{

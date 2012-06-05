@@ -3,27 +3,31 @@
         width="550" height="300" title="Employee Selector" showCloseButton="true"
         creationComplete="init()" >
 
-    <mx:HTTPService showBusyCursor="true" id="httpServiceSelect" resultFormat="xml"
-            result="selectResult(event)" fault="selectFault(event)"/>
+    
 
     <mx:Script>
         <![CDATA[
-        
+            import com.adobe.cairngorm.control.CairngormEventDispatcher;
+            import mx.collections.ArrayCollection;
             import mx.collections.XMLListCollection;
             import mx.controls.Alert;
             import mx.managers.PopUpManager;
             import mx.rpc.events.FaultEvent;
             import mx.rpc.events.ResultEvent;
             
+            
+            import cairngormevents.AddEmployeeEvent;
             import entity.Employee;
             import entity.EmployeeStatus;
             import entity.ProjectStatus;
+            import model.ExamModelLocator;
             import utils.DateRandom;
             import utils.EmployeeSelectEvent;
             import utils.PopUpCloseEvent;
+            
+            
 
-            [Bindable]
-            private var employeeData:XMLListCollection;
+
 
             private function init():void{
                 this.addEventListener(Event.CLOSE, closeHandler);
@@ -32,10 +36,12 @@
             }
 
             private function closeHandler(event:Event):void {
-                this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
+                //this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
+                PopUpManager.removePopUp(this);
             }
 
             private function selectHandler(event:MouseEvent):void{
+                var employeeData:ArrayCollection = ExamModelLocator.getInstance().employeeSelectorPm.employeeList;
                 if (dg.selectedIndex < 0){   //no employee select
                     Alert.show("No Employee selected");
                 }else if (employeeData[dg.selectedIndex].status == EmployeeStatus.OVERLOAD){
@@ -44,41 +50,25 @@
                 }else{
                     //Alert.show(employeedata[dg.selectedIndex].id);
                     var employee:Employee = new Employee();
-                    employee.employeeId = employeeData[dg.selectedIndex].id;
-                    employee.employeeName = employeeData[dg.selectedIndex].name;
-                    employee.employeeStatus = employeeData[dg.selectedIndex].status;
-                    var selectEvent:EmployeeSelectEvent = new EmployeeSelectEvent(
-                            EmployeeSelectEvent.EMPLOY_SELECT_EVENT,employee);
-                    this.dispatchEvent(selectEvent);
-//                    PopUpManager.removePopUp(this);
+                    employee.id = employeeData[dg.selectedIndex].id;
+                    employee.name = employeeData[dg.selectedIndex].name;
+                    employee.status = employeeData[dg.selectedIndex].status;
+                    var selectEvent:AddEmployeeEvent = new AddEmployeeEvent(AddEmployeeEvent.ADD_EMPLOYEE_IN_PROJECT,
+                            employee);
+                    CairngormEventDispatcher.getInstance().dispatchEvent(selectEvent);
+                    PopUpManager.removePopUp(this);
                 }
             }
 
-            //the parent will call this to load the all employee
-            public function loadEmployee():void{
-                var url:String = "http://localhost:8083/FlexExamDataService/AllEmployees?t="
-                        + utils.DateRandom.generate();
-                httpServiceSelect.url = url;
-                httpServiceSelect.send();
-            }
-            //below are handlers to handle load employee httpservice
-            private function selectFault(event:FaultEvent):void{
-                Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
-//                PopUpManager.removePopUp(this);
-            }
-
-            private function selectResult(event:ResultEvent):void{
-                var employees:XML = new XML(event.result);
-                employeeData = new XMLListCollection( employees.children() );
-            }
+            
 
         ]]>
     </mx:Script>
     <mx:VBox>
         
     
-        <mx:DataGrid  width="100%" height="196" dataProvider="{employeeData}" id="dg" >
+        <mx:DataGrid  width="100%" height="196" 
+            dataProvider="{ExamModelLocator.getInstance().employeeSelectorPm.employeeList}" id="dg" >
             <mx:columns>
                 <mx:DataGridColumn headerText="ID" dataField="id"/>
                 <mx:DataGridColumn headerText="Name" dataField="name"/>

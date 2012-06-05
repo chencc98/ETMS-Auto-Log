@@ -3,69 +3,39 @@
     <mx:Script>
         <![CDATA[
             
+            import com.adobe.cairngorm.control.CairngormEventDispatcher;
             import mx.controls.Alert;
             import mx.managers.PopUpManager;
+            
+            import cairngormevents.ProjectDetailPopUpEvent;
+            import entity.MainPanelProject;
             import entity.ProjectStatus;
             import ui.ProjectDetail;
             import ui.ProjectDetailWrap;
             import utils.ProjectRefreshEvent;
             import utils.PopUpCloseEvent;
             
-            private var projectDetail:ProjectDetail;
+            
             
             private function init():void{
                 this.addEventListener(MouseEvent.CLICK, openDetail);
             }
+            private function openDetail(event:MouseEvent):void{
+                var itemData:MainPanelProject = new MainPanelProject;
+                itemData.id = data.id;
+                itemData.name = data.name;
+                itemData.client = data.client;
+                itemData.status = data.status;
+                itemData.progress = data.progress;
+                itemData.employee = data.employee;
+                var popupEvent:ProjectDetailPopUpEvent = new ProjectDetailPopUpEvent(
+                        ProjectDetailPopUpEvent.PROJECT_DETAIL,
+                        itemData,  this.owner);
+                CairngormEventDispatcher.getInstance().dispatchEvent(popupEvent);
+            }
+
             
 
-            //open a pop-up to see the detail
-            private function openDetail(event:MouseEvent):void {
-                projectDetail = ProjectDetailWrap.getProjectDetailUI();
-                PopUpManager.addPopUp(projectDetail, this.owner, true);
-                //Mypopup.x = Capabilities.screenResolutionX/2 - Mypopup.width/2;
-                //Mypopup.y = Capabilities.screenResolutionY/2 - Mypopup.height/2;
-                PopUpManager.centerPopUp(projectDetail);
-                
-                projectDetail.projectId.text = data.id;
-                projectDetail.projectName.text = data.name;
-                projectDetail.client.text = data.client;
-                projectDetail.projectStatus.text = data.status;
-                projectDetail.progress.text = data.progress;
-                projectDetail.progress.enabled = false;
-                projectDetail.deleteEmployee.enabled = false;
-                projectDetail.addEmployee.enabled = false;
-                projectDetail.editButton.enabled = true;
-                projectDetail.editButton.visible = true;
-                projectDetail.submitButton.enabled = false;
-                projectDetail.submitButton.visible = false;
-                
-                //if the project is complete, edit is not allowed
-                if (data.status == ProjectStatus.COMPLETE) {
-                    projectDetail.editButton.enabled = false;
-                }
-                
-                //as the initial step, load the employees under this project
-                projectDetail.loadEmployee();
-                
-//                if (!projectDetail.hasEventListener(ProjectRefreshEvent.REFRESH_EVENT)){
-                projectDetail.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
-                projectDetail.addEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopUp);
-//                }
-    
-                
-            }
-            
-            private function closePopUp(event:PopUpCloseEvent):void {
-                projectDetail.removeEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadMaindata);
-                projectDetail.removeEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopUp);
-                PopUpManager.removePopUp(projectDetail);
-            }
-            private function loadMaindata(event:ProjectRefreshEvent):void{
-                closePopUp(null);
-                
-                this.dispatchEvent(event);
-                
-            }
 
             
         ]]>

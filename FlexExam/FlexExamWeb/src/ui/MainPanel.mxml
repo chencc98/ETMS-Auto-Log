@@ -6,9 +6,11 @@
         creationComplete="init()">
         <mx:Script >
             <![CDATA[
+                import com.adobe.cairngorm.control.CairngormEventDispatcher;
+                
                 import cairngormevents.SimpleEvent;
                 import model.ExamModelLocator;
-                import com.adobe.cairngorm.control.CairngormEventDispatcher;
+                
                 
                 private function init():void{
                     var init:SimpleEvent = new SimpleEvent(SimpleEvent.PROJECT_INIT);

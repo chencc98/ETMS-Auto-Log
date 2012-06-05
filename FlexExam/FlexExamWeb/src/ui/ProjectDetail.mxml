@@ -2,38 +2,42 @@
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" width="522" height="456"
         title="Project Detail" showCloseButton="true"
         creationComplete="init();" >
-    <!-- below httpservice is used to get employee info -->	
-    <mx:HTTPService
-            showBusyCursor="true" id="httpServiceEmployee" resultFormat="xml"
-            result="getEmployeeResult(event)" fault="getEmployeeFault(event)"/>
-    <!-- below httpservice is used to edit the project -->
-    <mx:HTTPService showBusyCursor="true" id="httpServiceEdit"  resultFormat="text"
-            result="EditResult(event)" fault="EditFault(event)"/>
+    
 
     <!-- below the validator to validate the progress input -->
     <mx:NumberValidator allowNegative="false" domain="int" minValue="0" maxValue="100"
             source="{progress}" property="text" />
     <mx:Script>
         <![CDATA[
+            
+            import com.adobe.cairngorm.control.CairngormEventDispatcher;
+            import mx.collections.ArrayCollection;
             import mx.collections.XMLListCollection;
             import mx.controls.Alert;
             import mx.managers.PopUpManager;
             import mx.rpc.events.FaultEvent;
             import mx.rpc.events.ResultEvent;
+            
+            import cairngormevents.AllEmployeeLoadEvent;
+            import cairngormevents.ProjectEditEvent;
             import entity.Employee;
+            import entity.MainPanelProject;
+            import entity.ProjectStatus;
+            import model.ExamModelLocator;
             import ui.EmployeeSelectorWrap;
             import utils.DateRandom;
             import utils.EmployeeSelectEvent;
             import utils.PopUpCloseEvent;
             import utils.ProjectRefreshEvent;
+            
 
-            [Bindable]
-            private var employeelist:XMLListCollection;
-
+            
             private var employeeIDlist:String = "";
-            private var employeeSelector:EmployeeSelector;
+            
 
             private function init():void{
+                
+                
                 this.addEventListener(Event.CLOSE, closeHandler);
                 closeButtonBottom.addEventListener(MouseEvent.CLICK, closeHandler);
                 editButton.addEventListener(MouseEvent.CLICK,editHandler);
@@ -47,65 +51,41 @@
                 if (employeeDG.selectedIndex < 0) {
                     Alert.show("No Employee selected");
                 }else{
-                    employeelist.removeItemAt(employeeDG.selectedIndex);
+                    ExamModelLocator.getInstance().projectDetailPm.employeeList.removeItemAt(employeeDG.selectedIndex);
                 }
             }
 
             //the add employee button event handler, will open employee selector ui
             private function addEmployeeHandler(event:MouseEvent):void {
+                var select:AllEmployeeLoadEvent = new AllEmployeeLoadEvent(
+                        AllEmployeeLoadEvent.ALL_EMPLOYEE_LOAD, this);
+                CairngormEventDispatcher.getInstance().dispatchEvent(select);
 
-                employeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
-                
-                PopUpManager.addPopUp(employeeSelector, this, true);
-                PopUpManager.centerPopUp(employeeSelector);
-//                if (!employeeSelector.hasEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT)){
-                employeeSelector.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
-                        insertEmployee);
-                employeeSelector.addEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopup);
-//                }
-                employeeSelector.loadEmployee(); 
+
                 
             }
-            private function closePopup(event:PopUpCloseEvent):void {
-                employeeSelector.removeEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
-                        insertEmployee);
-                employeeSelector.removeEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closePopup);
-                PopUpManager.removePopUp(employeeSelector);
-            }
+            
 
-            //after user select a user, it will dispatch the event and here we will capture and handler
-            private function insertEmployee(event:EmployeeSelectEvent):void{
-                var employee:Employee = event.EmployeeInside;
-                closePopup(null);
-                if (employee == null){
-                    return;
-                }
-                //search the dataprovider, if the employee exist, ignore
-                var len:Number = employeelist.length;
-                for( var i:Number=0; i< len; i++){
-                    if( employeelist[i].id == employee.employeeId ){
-                        Alert.show("Existing Employee [" + employee.employeeName 
-                                + "] detected, ignore!");
-                        return;
-                    }
-                }
-
-                //add this employee data into data provider
-                var xml:XMLList = new XMLList(employee.toXMLFormat);
-                employeelist.addItem(xml);
-
-            }
+            
 
             private function closeHandler(event:Event):void{
                 cleanEmployeeList();
-                var closeevent:PopUpCloseEvent = 
-                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
-                this.dispatchEvent(closeevent);
+                PopUpManager.removePopUp(this);
+//                var closeevent:PopUpCloseEvent = 
+//                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
+//                this.dispatchEvent(closeevent);
             }
             
             //before remove this popup, please invoke this to clean employee list
             private function cleanEmployeeList():void{
-                employeelist.removeAll();
+                ExamModelLocator.getInstance().projectDetailPm.employeeList.removeAll();
+                progress.enabled = false;
+                addEmployee.enabled = false;
+                deleteEmployee.enabled = false;
+                editButton.enabled = true;
+                editButton.visible = true;
+                submitButton.enabled = false;
+                submitButton.visible = false;
             }
 
             private function editHandler(event:MouseEvent):void{
@@ -125,63 +105,24 @@
                 //below mode is submit, handler submit event
                 //get the employee id list as xxxx,xxxx,xxx   and then transfer to remote
                 employeeIDlist = "";
-                var len:Number = employeelist.length;
+                var tempArr:ArrayCollection = ExamModelLocator.getInstance().projectDetailPm.employeeList;
+                var len:Number = tempArr.length;
                 var i:Number = 0;
                 for( i = 0; i< len ; i++){
-                    employeeIDlist += employeelist[i].id;
+                    employeeIDlist += tempArr[i].id;
                     if( i != (len -1) ){
                         employeeIDlist += ",";
                     }
                 }
 
-                var url:String = "http://localhost:8083/FlexExamDataService/EditProject?"
-                        + "projectid=" + projectId.text + "&progress=" + progress.text
-                        + "&employees=" + employeeIDlist + "&t=" + DateRandom.generate();
-                httpServiceEdit.url = url;
-                httpServiceEdit.send();
-            }
-
-            //update the project to handle the http
-            private function EditFault(event:FaultEvent):void{
-                Alert.show("Error when update Project with " + event.fault.faultDetail);
-                cleanEmployeeList();
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true,
-                        ProjectRefreshEvent.DO_REFRESH));
+                var editEvent:ProjectEditEvent = new ProjectEditEvent(ProjectEditEvent.PROJECT_EDIT,
+                        projectId.text, progress.text,employeeIDlist);
+                CairngormEventDispatcher.getInstance().dispatchEvent(editEvent);
                 
-//                PopUpManager.removePopUp(this);
-
-            }
-            private function EditResult(event:ResultEvent):void{
-                var re:String = event.result as String;
-                Alert.show(re);
-                cleanEmployeeList();
-                this.dispatchEvent(new ProjectRefreshEvent(ProjectRefreshEvent.REFRESH_EVENT, true,
-                        ProjectRefreshEvent.DO_REFRESH) );
-                
-//                PopUpManager.removePopUp(this);
-
+                closeHandler(null);
             }
 
-            //load the employee from remote, this's called by the parent to init
-            public function loadEmployee():void{
-                var url:String = 
-                        "http://localhost:8083/FlexExamDataService/AllEmployeesInProject?projectid=";
-                httpServiceEmployee.url = url + projectId.text
-                        + "&t=" + DateRandom.generate();
-                httpServiceEmployee.send();
-            }
-            //handle getemployee http 
-            private function getEmployeeFault( event:FaultEvent ):void{
-                Alert.show("Error when fetch Employee data with " + event.fault.faultDetail);
-                var closeevent:PopUpCloseEvent = 
-                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
-                this.dispatchEvent(closeevent);
-            }
-            private function getEmployeeResult(event:ResultEvent):void{
-                var xmlresult:XML = XML(event.result);
-                employeelist = new XMLListCollection(xmlresult.children());
 
-            }
 
         ]]>
     </mx:Script>
@@ -192,19 +133,19 @@
                     <mx:Label text="ID:" width="45" height="17" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectId"/>
+                    <mx:Label width="76" id="projectId" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.id}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Name:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectName"/>
+                    <mx:Label width="76" id="projectName" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.name}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Client:"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="87" id="client"/>
+                    <mx:Label width="87" id="client" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.client}"/>
                 </mx:GridItem>
             </mx:GridRow>
             <mx:GridRow>
@@ -212,13 +153,13 @@
                     <mx:Label text="Status:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectStatus"/>
+                    <mx:Label width="76" id="projectStatus" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.status}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Progress:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem >
-                    <mx:TextInput width="76" id="progress" enabled="false"/>
+                    <mx:TextInput width="76" id="progress" enabled="false" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.progress}"/>
                     <mx:Label text="%"/>
                 </mx:GridItem>
                 <mx:GridItem>
@@ -234,7 +175,7 @@
             
         
             <mx:DataGrid  id="employeeDG" width="421" height="320"
-                    dataProvider="{employeelist}">
+                    dataProvider="{ExamModelLocator.getInstance().projectDetailPm.employeeList}">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ID" dataField="id"/>
                     <mx:DataGridColumn headerText="Name" dataField="name"/>
@@ -251,8 +192,9 @@
         <mx:HBox>
             
         
-        <mx:Button label="Edit" bottom="20" id="editButton"/>
-        <mx:Button label="Submit" bottom="20" id="submitButton"/>
+        <mx:Button label="Edit" bottom="20" id="editButton" 
+            enabled="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.status == ProjectStatus.COMPLETE ? false : true}"/>
+        <mx:Button label="Submit" bottom="20" id="submitButton" enabled="false" visible="false"/>
         <mx:Button label="Close" bottom="20" id="closeButtonBottom"/>
         </mx:HBox>
     </mx:VBox>
