@@ -126,6 +126,7 @@
 
         ]]>
     </mx:Script>
+    
     <mx:VBox>
         <mx:Grid>
             <mx:GridRow>
@@ -159,7 +160,8 @@
                     <mx:Label text="Progress:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem >
-                    <mx:TextInput width="76" id="progress" enabled="false" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.progress}"/>
+                    <mx:TextInput width="76" id="progress" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableProjectProgress}" 
+                            text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.progress}"/>
                     <mx:Label text="%"/>
                 </mx:GridItem>
                 <mx:GridItem>
@@ -185,16 +187,20 @@
             <mx:VBox>
                 
             
-                <mx:Button  label="Del" width="53" enabled="false" id="deleteEmployee"/>
-                <mx:Button  label="Add" width="53" enabled="false" id="addEmployee"/>
+                <mx:Button  label="Del" width="53" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableDelEmployeeButton}" 
+                    id="deleteEmployee"/>
+                <mx:Button  label="Add" width="53" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableAddEmployeeButton}" 
+                    id="addEmployee"/>
             </mx:VBox>
         </mx:HBox>
         <mx:HBox>
             
         
         <mx:Button label="Edit" bottom="20" id="editButton" 
-            enabled="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.status == ProjectStatus.COMPLETE ? false : true}"/>
-        <mx:Button label="Submit" bottom="20" id="submitButton" enabled="false" visible="false"/>
+            enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableEditButton}"
+            visible="{ExamModelLocator.getInstance().projectDetailPm.isVisibleEditButton}"/>
+        <mx:Button label="Submit" bottom="20" id="submitButton" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableSubmitButton}" 
+            visible="{ExamModelLocator.getInstance().projectDetailPm.isEnableSubmitButton}"/>
         <mx:Button label="Close" bottom="20" id="closeButtonBottom"/>
         </mx:HBox>
     </mx:VBox>

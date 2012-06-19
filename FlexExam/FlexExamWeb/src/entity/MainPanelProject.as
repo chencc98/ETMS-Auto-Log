@@ -1,6 +1,7 @@
 package entity{
     import com.adobe.cairngorm.vo.ValueObject;
     
+    [Bindable]
     [RemoteClass(alias="com.ssga.flexexam.service.entity.MainPanelProject")]
     public class MainPanelProject implements ValueObject{
         public var id:String;
