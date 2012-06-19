@@ -16,6 +16,7 @@ package command{
     import business.ProjectDetailDelegate;
     import cairngormevents.ProjectDetailPopUpEvent;
     import entity.MainPanelProject;
+    import entity.ProjectStatus;
     import model.ExamModelLocator;
     import pm.ProjectDetailPm;
     import ui.ProjectDetail;
@@ -41,6 +42,18 @@ package command{
             //Alert.show("ok");
             var mpm:ProjectDetailPm = ExamModelLocator.getInstance().projectDetailPm;
             mpm.projectDetail = this.project;
+            if (mpm.projectDetail.status == ProjectStatus.COMPLETE){
+                mpm.isEnableEditButton = false;
+            }else{
+                mpm.isEnableEditButton = true;
+            }
+            mpm.isEnableAddEmployeeButton = false;
+            mpm.isEnableDelEmployeeButton = false;
+            mpm.isEnableProjectProgress = false;
+            mpm.isEnableSubmitButton = false;
+            mpm.isVisibleEditButton = true;
+            
+            
             var arraylist:ArrayCollection = (data as ResultEvent).result as ArrayCollection;
             mpm.employeeList = arraylist;
             

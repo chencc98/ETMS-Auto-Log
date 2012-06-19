@@ -4,7 +4,15 @@
     
     <mx:Script>
         <![CDATA[
+            import mx.controls.listClasses.ListItemRenderer;
             import mx.collections.ArrayCollection;
+            import mx.events.ListEvent;
+            import mx.controls.listClasses.IListItemRenderer;
+            import mx.managers.CursorManager;
+            
+            [Bindable]
+            private var listarray:ArrayCollection = new ArrayCollection([
+                    {label:"good"}, {label:"bad"} ]);
             
             private function init():void{
                 gap.text = demo.getStyle("horizontalGap");
@@ -25,6 +33,14 @@
                 demo.imageSource = imgs.selectedLabel;
                 demo.width = new Number(demowidth.text);
             }
+            
+            private function itemRollover(event:ListEvent):void{
+                CursorManager.setBusyCursor();
+            }
+            private function itemRollout(event:ListEvent):void{
+                CursorManager.removeAllCursors();
+            }
+            
         ]]>
     </mx:Script>
     <mx:Array id="comboData">
@@ -64,5 +80,9 @@
     <mx:HBox>
         <mx:Button label="ok" click="clickHandler(event)" />
     </mx:HBox>
+    <mx:List dataProvider="{this.listarray}" itemRollOver="this.itemRollover(event)" 
+        itemRollOut="this.itemRollout(event)" />
+    
+    <mx:ComboBox dataProvider="{this.listarray}"  rollOverColor="#123456"/>
    
 </mx:Application>
