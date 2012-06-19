@@ -576,7 +576,7 @@ public class Main {
 		Calendar c = Calendar.getInstance();
 		c.setTime(dt);
 		int day = c.get(Calendar.DAY_OF_MONTH);
-		if( day >= 1 && day <= 15 ){  //pick up the same hospital and same depart
+		if( day >= 1 && day <= 10 ){  //pick up the same hospital and same depart
 			pickupHospitalDepart();
 			if( vused.size() < Constants.MINIMUM_LOG){
 				pickupHospital(Constants.MINIMUM_LOG);
