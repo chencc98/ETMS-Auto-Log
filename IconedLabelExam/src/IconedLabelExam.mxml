@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" xmlns:ui="ui.*"
-         creationComplete="init()">
+         creationComplete="init()" >
     
     <mx:Script>
         <![CDATA[
@@ -30,9 +30,13 @@
                 demo.setStyle("paddingLeft",left.text);
                 demo.setStyle("paddingRight",right.text);
                 demo.labelText = inputtext.text;
-                demo.imageSource = imgs.selectedLabel;
+                //demo.imageSource = imgs.selectedLabel;
                 demo.width = new Number(demowidth.text);
+                
+                
             }
+            
+            
             
             private function itemRollover(event:ListEvent):void{
                 CursorManager.setBusyCursor();
@@ -70,7 +74,8 @@
     <mx:HBox>
         <mx:Label text="width" /><mx:TextInput id="demowidth" />
         <mx:Label text="label" /><mx:TextArea id="inputtext" />
-        <mx:Label text="img" /><mx:ComboBox id="imgs"  dataProvider="{imgsource}" />
+        <mx:Label text="img" />
+        <!-- <mx:ComboBox id="imgs"  dataProvider="{imgsource}" /> -->
                          
                         
                                    

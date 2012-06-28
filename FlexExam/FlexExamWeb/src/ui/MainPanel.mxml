@@ -2,19 +2,28 @@
 
 <mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
         width="100%" height="100%" 
-        dataProvider="{ExamModelLocator.getInstance().mainPanelPm.employeeList}" 
+        dataProvider="{this.mainPanelPm.employeeList}" 
         creationComplete="init()">
         <mx:Script >
             <![CDATA[
+                import cairngormevents.GetMainPanelProjectEvent;
+                import pm.MainPanelPm;
                 import com.adobe.cairngorm.control.CairngormEventDispatcher;
                 
                 import cairngormevents.SimpleEvent;
                 import model.ExamModelLocator;
+                import utils.ProjectRefreshEvent;
                 
+                [Bindable]
+                private var mainPanelPm:MainPanelPm = new MainPanelPm();
                 
                 private function init():void{
-                    var init:SimpleEvent = new SimpleEvent(SimpleEvent.PROJECT_INIT);
-                    CairngormEventDispatcher.getInstance().dispatchEvent(init);
+                    this.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, loadData);
+                    loadData(null);
+                }
+                
+                private function loadData(event:ProjectRefreshEvent):void{
+                    this.mainPanelPm.loadAllProjects();
                 }
             ]]>
         </mx:Script>

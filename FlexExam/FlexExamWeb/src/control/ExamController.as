@@ -5,6 +5,7 @@ package control{
     import cairngormevents.ProjectEditEvent;
     import cairngormevents.AllEmployeeLoadEvent;
     import cairngormevents.AddEmployeeEvent;
+    import cairngormevents.GetMainPanelProjectEvent;
     import command.LoadEmployeeInitCommand;
     import command.OpenProjectDetailCommand;
     import command.ProjectEditCommand;
@@ -15,11 +16,12 @@ package control{
         public function ExamController(){
             
             
-            addCommand(SimpleEvent.PROJECT_INIT,LoadEmployeeInitCommand);
+            
             addCommand(ProjectDetailPopUpEvent.PROJECT_DETAIL, OpenProjectDetailCommand);
             addCommand(ProjectEditEvent.PROJECT_EDIT,ProjectEditCommand);
             addCommand(AllEmployeeLoadEvent.ALL_EMPLOYEE_LOAD,AllEmployeeLoadCommand);
             addCommand(AddEmployeeEvent.ADD_EMPLOYEE_IN_PROJECT, AddEmployeeCommand);
+            addCommand(GetMainPanelProjectEvent.GET_MAINPANEL_PROJECT,LoadEmployeeInitCommand);
         }
         
     }

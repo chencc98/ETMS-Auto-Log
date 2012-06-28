@@ -1,32 +1,39 @@
 package cairngormevents{
     import com.adobe.cairngorm.control.CairngormEvent;
-    import flash.display.DisplayObjectContainer;
-    import flash.events.Event;
     
     import entity.MainPanelProject;
+    
+    import flash.events.Event;
+    
+    import pm.ProjectDetailPm;
 
     public class ProjectDetailPopUpEvent extends CairngormEvent{
         public static const PROJECT_DETAIL:String = "PROJECT_DETAIL";
         private var project:MainPanelProject;
-        private var popupParent:DisplayObjectContainer;
+        private var pm:ProjectDetailPm;
+        private var proName:String;
         public function ProjectDetailPopUpEvent(type:String, project:MainPanelProject, 
-                parent:DisplayObjectContainer)
+                mm:ProjectDetailPm, prop:String)
         {
             super(type);
             this.project = project;
-            this.popupParent = parent;
+            this.pm = mm;
+            this.proName = prop;
         }
         
         public function getProjectInfo():MainPanelProject{
             return this.project;
         }
-        public function getPopUpParent():DisplayObjectContainer{
-            return this.popupParent;
+        public function getPM():ProjectDetailPm{
+            return this.pm;
+        }
+        public function getPropName():String{
+            return this.proName;
         }
         
         override public function clone():Event{
             return new ProjectDetailPopUpEvent(ProjectDetailPopUpEvent.PROJECT_DETAIL, 
-                    project, popupParent);
+                    project, pm, proName);
         }
         
     }

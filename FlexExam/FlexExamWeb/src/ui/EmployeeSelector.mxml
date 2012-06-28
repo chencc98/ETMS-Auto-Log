@@ -7,6 +7,7 @@
 
     <mx:Script>
         <![CDATA[
+            import pm.EmployeeSelectorPm;
             import com.adobe.cairngorm.control.CairngormEventDispatcher;
             import mx.collections.ArrayCollection;
             import mx.collections.XMLListCollection;
@@ -26,7 +27,8 @@
             import utils.PopUpCloseEvent;
             
             
-
+            [Bindable]
+            public var employeeSelectorPm:EmployeeSelectorPm = new EmployeeSelectorPm();
 
 
             private function init():void{
@@ -36,12 +38,12 @@
             }
 
             private function closeHandler(event:Event):void {
-                //this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
-                PopUpManager.removePopUp(this);
+                this.dispatchEvent(new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT));
+                //PopUpManager.removePopUp(this);
             }
 
             private function selectHandler(event:MouseEvent):void{
-                var employeeData:ArrayCollection = ExamModelLocator.getInstance().employeeSelectorPm.employeeList;
+                var employeeData:ArrayCollection = employeeSelectorPm.employeeList;
                 if (dg.selectedIndex < 0){   //no employee select
                     Alert.show("No Employee selected");
                 }else if (employeeData[dg.selectedIndex].status == EmployeeStatus.OVERLOAD){
@@ -53,10 +55,13 @@
                     employee.id = employeeData[dg.selectedIndex].id;
                     employee.name = employeeData[dg.selectedIndex].name;
                     employee.status = employeeData[dg.selectedIndex].status;
-                    var selectEvent:AddEmployeeEvent = new AddEmployeeEvent(AddEmployeeEvent.ADD_EMPLOYEE_IN_PROJECT,
+                    var selectEvent:EmployeeSelectEvent = new EmployeeSelectEvent(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
                             employee);
-                    CairngormEventDispatcher.getInstance().dispatchEvent(selectEvent);
-                    PopUpManager.removePopUp(this);
+                    this.dispatchEvent(selectEvent);
+//                    var selectEvent:AddEmployeeEvent = new AddEmployeeEvent(AddEmployeeEvent.ADD_EMPLOYEE_IN_PROJECT,
+//                            employee);
+//                    CairngormEventDispatcher.getInstance().dispatchEvent(selectEvent);
+                    //PopUpManager.removePopUp(this);
                 }
             }
 
@@ -68,7 +73,7 @@
         
     
         <mx:DataGrid  width="100%" height="196" 
-            dataProvider="{ExamModelLocator.getInstance().employeeSelectorPm.employeeList}" id="dg" >
+            dataProvider="{employeeSelectorPm.employeeList}" id="dg" >
             <mx:columns>
                 <mx:DataGridColumn headerText="ID" dataField="id"/>
                 <mx:DataGridColumn headerText="Name" dataField="name"/>

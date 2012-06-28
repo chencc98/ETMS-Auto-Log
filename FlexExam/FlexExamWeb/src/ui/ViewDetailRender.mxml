@@ -15,10 +15,11 @@
             import utils.ProjectRefreshEvent;
             import utils.PopUpCloseEvent;
             
-            
+            private var popupRef:ProjectDetail;
             
             private function init():void{
                 this.addEventListener(MouseEvent.CLICK, openDetail);
+                
             }
             private function openDetail(event:MouseEvent):void{
                 var itemData:MainPanelProject = new MainPanelProject;
@@ -28,13 +29,26 @@
                 itemData.status = data.status;
                 itemData.progress = data.progress;
                 itemData.employee = data.employee;
-                var popupEvent:ProjectDetailPopUpEvent = new ProjectDetailPopUpEvent(
-                        ProjectDetailPopUpEvent.PROJECT_DETAIL,
-                        itemData,  this.owner);
-                CairngormEventDispatcher.getInstance().dispatchEvent(popupEvent);
+                this.popupRef = ProjectDetailWrap.getProjectDetailUI();
+                this.popupRef.projectDetailPm.setData(itemData);
+                PopUpManager.addPopUp(this.popupRef,this.owner,true);
+                PopUpManager.centerPopUp(this.popupRef);
+                
+                this.popupRef.addEventListener(ProjectRefreshEvent.REFRESH_EVENT, closePop);
             }
 
-            
+            private function closePop(event:ProjectRefreshEvent):void{
+                this.popupRef.removeEventListener(ProjectRefreshEvent.REFRESH_EVENT, closePop);
+                PopUpManager.removePopUp(this.popupRef);
+                if( event.whatToDo == ProjectRefreshEvent.JUST_CLOSE ){
+                    
+                    
+                    event.stopPropagation();
+                }else{
+                    //PopUpManager.removePopUp(this.popupRef);
+                    this.dispatchEvent(event);
+                }
+            }
 
 
             

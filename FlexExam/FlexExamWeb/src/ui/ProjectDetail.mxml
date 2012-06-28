@@ -6,9 +6,14 @@
 
     <!-- below the validator to validate the progress input -->
     <mx:NumberValidator allowNegative="false" domain="int" minValue="0" maxValue="100"
-            source="{progress}" property="text" />
+            source="{progress}" property="text"  id="progressValidate" required="true"
+            invalidCharError="Only Integer 0-100 are allowed"/>
     <mx:Script>
         <![CDATA[
+            import mx.events.ValidationResultEvent;
+            import mx.validators.ValidationResult;
+            import mx.events.CloseEvent;
+            import pm.ProjectDetailPm;
             
             import com.adobe.cairngorm.control.CairngormEventDispatcher;
             import mx.collections.ArrayCollection;
@@ -33,7 +38,10 @@
 
             
             private var employeeIDlist:String = "";
+            [Bindable]
+            public var projectDetailPm:ProjectDetailPm = new ProjectDetailPm();
             
+            private var employeeSelectorPopRef:EmployeeSelector;
 
             private function init():void{
                 
@@ -51,26 +59,46 @@
                 if (employeeDG.selectedIndex < 0) {
                     Alert.show("No Employee selected");
                 }else{
-                    ExamModelLocator.getInstance().projectDetailPm.employeeList.removeItemAt(employeeDG.selectedIndex);
+                    projectDetailPm.employeeList.removeItemAt(employeeDG.selectedIndex);
                 }
             }
 
             //the add employee button event handler, will open employee selector ui
             private function addEmployeeHandler(event:MouseEvent):void {
-                var select:AllEmployeeLoadEvent = new AllEmployeeLoadEvent(
-                        AllEmployeeLoadEvent.ALL_EMPLOYEE_LOAD, this);
-                CairngormEventDispatcher.getInstance().dispatchEvent(select);
+                this.employeeSelectorPopRef = EmployeeSelectorWrap.getEmployeeSelector();
+                this.employeeSelectorPopRef.employeeSelectorPm.loadAllEmployee();
+                PopUpManager.addPopUp(this.employeeSelectorPopRef,this,true);
+                PopUpManager.centerPopUp(this.employeeSelectorPopRef);
 
-
+                this.employeeSelectorPopRef.addEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closeSelector);
+                this.employeeSelectorPopRef.addEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
+                        addSelectedEmployee);
                 
             }
             
-
+            private function closeSelector(event:Event):void{
+                this.employeeSelectorPopRef.removeEventListener(PopUpCloseEvent.POPUP_CLOSE_EVENT, closeSelector);
+                this.employeeSelectorPopRef.removeEventListener(EmployeeSelectEvent.EMPLOY_SELECT_EVENT,
+                        addSelectedEmployee);
+                PopUpManager.removePopUp(this.employeeSelectorPopRef);
+            }
+            
+            private function addSelectedEmployee(event:EmployeeSelectEvent):void{
+                closeSelector(null);
+                
+                var employee:Employee = event.EmployeeInside;
+                var res:String = projectDetailPm.addEmployee(employee);
+                if( res != ""){
+                    Alert.show(res);
+                }
+            }
             
 
             private function closeHandler(event:Event):void{
                 cleanEmployeeList();
-                PopUpManager.removePopUp(this);
+                var closeEvent:ProjectRefreshEvent = new ProjectRefreshEvent(
+                        ProjectRefreshEvent.REFRESH_EVENT, true, ProjectRefreshEvent.JUST_CLOSE);
+                this.dispatchEvent(closeEvent);
 //                var closeevent:PopUpCloseEvent = 
 //                        new PopUpCloseEvent(PopUpCloseEvent.POPUP_CLOSE_EVENT);
 //                this.dispatchEvent(closeevent);
@@ -78,34 +106,31 @@
             
             //before remove this popup, please invoke this to clean employee list
             private function cleanEmployeeList():void{
-                ExamModelLocator.getInstance().projectDetailPm.employeeList.removeAll();
-                progress.enabled = false;
-                addEmployee.enabled = false;
-                deleteEmployee.enabled = false;
-                editButton.enabled = true;
-                editButton.visible = true;
-                submitButton.enabled = false;
-                submitButton.visible = false;
+                projectDetailPm.employeeList.removeAll();
+//                progress.enabled = false;
+//                addEmployee.enabled = false;
+//                deleteEmployee.enabled = false;
+//                editButton.enabled = true;
+//                editButton.visible = true;
+//                submitButton.enabled = false;
+//                submitButton.visible = false;
             }
 
             private function editHandler(event:MouseEvent):void{
                 //current mode is Edit, after click, edit is enabled
 
-                progress.editable = true;
-                progress.enabled = true;
-                addEmployee.enabled = true;
-                deleteEmployee.enabled = true;
-                editButton.enabled = false;
-                editButton.visible = false;
-                submitButton.enabled = true;
-                submitButton.visible = true;
+                projectDetailPm.startEdit();
             }
             
             private function submitHandler(event:MouseEvent):void{
+                var validate:ValidationResultEvent = progressValidate.validate();
+                if( validate.type == ValidationResultEvent.INVALID ){
+                    return;
+                }
                 //below mode is submit, handler submit event
                 //get the employee id list as xxxx,xxxx,xxx   and then transfer to remote
                 employeeIDlist = "";
-                var tempArr:ArrayCollection = ExamModelLocator.getInstance().projectDetailPm.employeeList;
+                var tempArr:ArrayCollection = projectDetailPm.employeeList;
                 var len:Number = tempArr.length;
                 var i:Number = 0;
                 for( i = 0; i< len ; i++){
@@ -116,10 +141,17 @@
                 }
 
                 var editEvent:ProjectEditEvent = new ProjectEditEvent(ProjectEditEvent.PROJECT_EDIT,
-                        projectId.text, progress.text,employeeIDlist);
+                        projectDetailPm.projectDetail.id, 
+                        progress.text,employeeIDlist, sendFeedback);
                 CairngormEventDispatcher.getInstance().dispatchEvent(editEvent);
                 
-                closeHandler(null);
+                //closeHandler(null);
+            }
+            
+            private function sendFeedback(event:CloseEvent):void{
+                var closeEvent:ProjectRefreshEvent = new ProjectRefreshEvent(
+                        ProjectRefreshEvent.REFRESH_EVENT, true, ProjectRefreshEvent.DO_REFRESH);
+                this.dispatchEvent(closeEvent);
             }
 
 
@@ -134,19 +166,19 @@
                     <mx:Label text="ID:" width="45" height="17" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectId" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.id}"/>
+                    <mx:Label width="76" id="projectId" text="{projectDetailPm.projectDetail.id}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Name:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectName" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.name}"/>
+                    <mx:Label width="76" id="projectName" text="{projectDetailPm.projectDetail.name}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Client:"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="87" id="client" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.client}"/>
+                    <mx:Label width="87" id="client" text="{projectDetailPm.projectDetail.client}"/>
                 </mx:GridItem>
             </mx:GridRow>
             <mx:GridRow>
@@ -154,14 +186,14 @@
                     <mx:Label text="Status:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem>
-                    <mx:Label width="76" id="projectStatus" text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.status}"/>
+                    <mx:Label width="76" id="projectStatus" text="{projectDetailPm.projectDetail.status}"/>
                 </mx:GridItem>
                 <mx:GridItem>
                     <mx:Label text="Progress:" textAlign="right"/>
                 </mx:GridItem>
                 <mx:GridItem >
-                    <mx:TextInput width="76" id="progress" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableProjectProgress}" 
-                            text="{ExamModelLocator.getInstance().projectDetailPm.projectDetail.progress}"/>
+                    <mx:TextInput width="76" id="progress" enabled="{!projectDetailPm.isReadOnlyStatus}" 
+                            text="{projectDetailPm.projectDetail.progress}"/>
                     <mx:Label text="%"/>
                 </mx:GridItem>
                 <mx:GridItem>
@@ -177,7 +209,7 @@
             
         
             <mx:DataGrid  id="employeeDG" width="421" height="320"
-                    dataProvider="{ExamModelLocator.getInstance().projectDetailPm.employeeList}">
+                    dataProvider="{projectDetailPm.employeeList}">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ID" dataField="id"/>
                     <mx:DataGridColumn headerText="Name" dataField="name"/>
@@ -187,9 +219,9 @@
             <mx:VBox>
                 
             
-                <mx:Button  label="Del" width="53" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableDelEmployeeButton}" 
+                <mx:Button  label="Del" width="53" enabled="{!projectDetailPm.isReadOnlyStatus}" 
                     id="deleteEmployee"/>
-                <mx:Button  label="Add" width="53" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableAddEmployeeButton}" 
+                <mx:Button  label="Add" width="53" enabled="{!projectDetailPm.isReadOnlyStatus}" 
                     id="addEmployee"/>
             </mx:VBox>
         </mx:HBox>
@@ -197,10 +229,10 @@
             
         
         <mx:Button label="Edit" bottom="20" id="editButton" 
-            enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableEditButton}"
-            visible="{ExamModelLocator.getInstance().projectDetailPm.isVisibleEditButton}"/>
-        <mx:Button label="Submit" bottom="20" id="submitButton" enabled="{ExamModelLocator.getInstance().projectDetailPm.isEnableSubmitButton}" 
-            visible="{ExamModelLocator.getInstance().projectDetailPm.isEnableSubmitButton}"/>
+            enabled="{projectDetailPm.isEditable}"
+            visible="{projectDetailPm.isReadOnlyStatus}"/>
+        <mx:Button label="Submit" bottom="20" id="submitButton" enabled="true" 
+            visible="{!projectDetailPm.isReadOnlyStatus}"/>
         <mx:Button label="Close" bottom="20" id="closeButtonBottom"/>
         </mx:HBox>
     </mx:VBox>

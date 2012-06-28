@@ -1,33 +1,39 @@
 package command{
     
     
+    import business.AllEmployeeLoadDelegate;
+    
+    import cairngormevents.AllEmployeeLoadEvent;
+    
     import com.adobe.cairngorm.commands.ICommand;
     import com.adobe.cairngorm.control.CairngormEvent;
-    import flash.display.DisplayObjectContainer;
+    
+    import model.ExamModelLocator;
+    
     import mx.collections.ArrayCollection;
     import mx.controls.Alert;
     import mx.managers.PopUpManager;
+    import mx.rpc.IResponder;
     import mx.rpc.events.FaultEvent;
     import mx.rpc.events.ResultEvent;
-    import mx.rpc.IResponder;
-
     
+    import pm.EmployeeSelectorPm;
     
-    import business.AllEmployeeLoadDelegate;
-    import cairngormevents.AllEmployeeLoadEvent;
-    import model.ExamModelLocator;
     import ui.EmployeeSelector;
     import ui.EmployeeSelectorWrap;
 
     public class AllEmployeeLoadCommand implements ICommand, IResponder {
-        private var parentPop:DisplayObjectContainer;
+        private var pm:EmployeeSelectorPm;
+        private var propName:String;
         public function AllEmployeeLoadCommand()
         {
         }
 
         public function execute(event:CairngormEvent):void {
             var select:AllEmployeeLoadEvent = event as AllEmployeeLoadEvent;
-            parentPop = select.getParent();
+            this.pm = select.getPM();
+            this.propName = select.getPropName();
+            
             
             var delegate:AllEmployeeLoadDelegate = new AllEmployeeLoadDelegate(this);
             delegate.loadEmployee();
@@ -35,11 +41,11 @@ package command{
         
         public function result(data:Object):void {
             var array:ArrayCollection = (data as ResultEvent).result as ArrayCollection;
-            ExamModelLocator.getInstance().employeeSelectorPm.employeeList = array;
+            pm[this.propName] = array;
             
-            var employeeSelector:EmployeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
-            PopUpManager.addPopUp(employeeSelector, this.parentPop, true);
-            PopUpManager.centerPopUp(employeeSelector);
+//            var employeeSelector:EmployeeSelector = EmployeeSelectorWrap.getEmployeeSelector();
+//            PopUpManager.addPopUp(employeeSelector, this.parentPop, true);
+//            PopUpManager.centerPopUp(employeeSelector);
         }
         
         public function fault(info:Object):void {
