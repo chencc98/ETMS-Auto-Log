@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Highcharts Example</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="../../js/highcharts.js"></script>
+<script src="../../js/modules/exporting.js"></script>
+
+		<script type="text/javascript" src="candlestick.js" ></script>
+		<script type="text/javascript">
+		
+//$(function () {
+    var chart;
+    $(document).ready(function() {
+        chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container',
+                type: 'candlestick',
+                marginRight: 130,
+                marginBottom: 25
+            },
+			
+            title: {
+                text: 'Candlestick test',
+                x: -20 //center
+            },
+            
+            xAxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            },
+            yAxis: {
+                title: {
+                    text: 'Pricing'
+                }
+                
+            },
+            tooltip: {
+                formatter: function() {
+                        return '<b>Open:</b>'+ this.point.open+' <b>Close:</b>'+ this.point.close + '<br/>' +
+                        '<b>High:</b>' +this.point.high +' <b>Low:</b>'+ this.point.low;
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                
+                data: [[0,3,10,3,3], [1,5,5,1,5], [2,8,14,8,14], 
+					  [3,9,12,8.5,8.5], [4,4,16,1,16], [5,10,17,8,15.2], 
+					  [6,10,25,9,17.0], [7,11,11,11,11], 
+					  [8,8,20,7,8], [9,15,20,15,15], [10,14,15,4,6.6], 
+					  [11,10,12,3,4.8]]
+            }]
+        });
+    });
+	var index = 12;
+	function addpoint(){
+		var point = {
+			x: index,
+			open: 20,
+			high: 35,
+			low: 8,
+			close: 15
+		};
+		chart.series[0].addPoint(point, true);
+		index ++;
+	}
+	
+	function setdata(){
+		var data = [[0,5,10,3,3], [1,6,7,1,5], [2,8,14,8,14], 
+					  [3,9,12,8.5,8.5], [4,4,16,1,16], [5,10,17,8,15.2], 
+					  [6,10,25,9,17.0], [7,11,11,11,11], 
+					  [8,8,20,7,8], [9,15,20,15,15], [10,14,15,4,6.6], 
+					  [11,10,19,3,4.8]];
+		chart.series[0].setData(data, true);
+	}
+    
+//});
+		</script>
+	</head>
+	<body>
+
+
+<div id="container" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+<input type="button" value="Add" onclick="addpoint();"/><br/>
+<input type="button" value="set data" onclick = "setdata();" />
+	</body>
+</html>
