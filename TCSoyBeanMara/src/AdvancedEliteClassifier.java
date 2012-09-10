@@ -92,6 +92,9 @@ public final class AdvancedEliteClassifier {
 		Map<String, Experiment> experiments = new HashMap<String, Experiment>();
 		String[] testID = getExperimentsFromTestData(testData, experiments);
 		getExperimentsFromTrainingData(trainingData, experiments,testID );
+		analyzeExperiments(experiments);
+		generateAverageScoreInExperiments(experiments);
+		generateMeanVarInExperiments(experiments);
 		return null;
 	}
 /*ExperimentID 
@@ -298,6 +301,92 @@ IsCheck */
 						tmpscore += tmpscoreIn;
 					}
 					tmvalue.setOneTrialScore(tmpscore);
+					//handle stat
+					VarietyDetail vd = exp.varietyInfoMap.get(tmvalue.getVarietyId());
+					vd.setQueryTime(vd.getQueryTime() + 1);
+					vd.setTotalScore(vd.getTotalScore() + tmvalue.getOneTrialScore());
+					vd.setTotalYield(vd.getTotalYield() + tmvalue.getYield());
+					System.out.println("VID: "+tmvalue.getVarietyId() + " Query: " +vd.getQueryTime() +" Score: "+vd.getTotalScore() + " Yield: "+vd.getTotalYield());
+				}
+			}
+			//ONE experiment first go through is done
+			
+		}
+	}
+	
+	private void generateAverageScoreInExperiments(Map<String, Experiment> experiments){
+		Collection<Experiment> allexp = experiments.values();
+		Iterator<Experiment> it = allexp.iterator();
+		while( it.hasNext() ){
+			Experiment exp = it.next();
+			Collection<VarietyDetail> allvd = exp.varietyInfoMap.values();
+			Iterator<VarietyDetail> vdit = allvd.iterator();
+			while( vdit.hasNext()){
+				VarietyDetail vd = vdit.next();
+				if(!vd.isCheck()){
+					vd.setAverageScore(vd.getTotalScore()/vd.getQueryTime());
+					System.out.println("VID: "+vd.getVarietyId() + " AVGSC: "+vd.getAverageScore());
+				}
+			}
+		}
+	}
+	
+	private void generateMeanVarInExperiments(Map<String, Experiment> experiments){
+		Collection<Experiment> allexp = experiments.values();
+		Iterator<Experiment> it = allexp.iterator();
+		while( it.hasNext() ){
+			Experiment exp = it.next();
+			Collection<VarietyDetail> allvd = exp.varietyInfoMap.values();
+			Iterator<VarietyDetail> vdit = allvd.iterator();
+			while( vdit.hasNext()){
+				VarietyDetail vd = vdit.next();
+				if(!vd.isCheck()){
+					vd.setAverageYield(vd.getTotalYield()/vd.getQueryTime());
+					System.out.println("VID: "+vd.getVarietyId() + " AVGYIELD: "+vd.getAverageYield());
+				}
+			}
+			
+			//start to work
+			Set<TrialMapKey> keySet = exp.trials.keySet();
+			Iterator<TrialMapKey> keyIt = keySet.iterator();
+			while( keyIt.hasNext()){
+				TrialMapKey key = keyIt.next();
+				Set<TrialMapValue> newVariety = exp.trials.get(key).get(TrialTypeEnum.NEWVARIETYSET);
+				Iterator<TrialMapValue> newVarietyIt = newVariety.iterator();
+				
+				while( newVarietyIt.hasNext()){
+					TrialMapValue tmvalue = newVarietyIt.next();
+					VarietyDetail vd = exp.varietyInfoMap.get(tmvalue.getVarietyId());
+					vd.setMeanVar(vd.getMeanVar() + Math.pow((tmvalue.getYield() - vd.getAverageYield()), 2));
+					System.out.println("VID: "+vd.getVarietyId() + " Mean: " + vd.getMeanVar());
+				}
+			}
+			Iterator<VarietyDetail> anothervdit = allvd.iterator();
+			double minMean = 0;
+			double maxMean = 0;
+			while( anothervdit.hasNext()){
+				VarietyDetail vd = anothervdit.next();
+				if(!vd.isCheck()){
+					vd.setMeanVar(Math.pow(vd.getMeanVar()/vd.getQueryTime(), 0.5));
+					if(vd.getMeanVar() < minMean){
+						minMean = vd.getMeanVar();
+					}
+					if(vd.getMeanVar() > maxMean){
+						maxMean = vd.getMeanVar();
+					}
+					System.out.println("VID: "+vd.getVarietyId() + " AVGMEAN: "+vd.getMeanVar());
+				}
+			}
+			
+			//go through again to normalize 
+			Iterator<VarietyDetail> thirdvdit = allvd.iterator();
+			
+			while( thirdvdit.hasNext()){
+				VarietyDetail vd = thirdvdit.next();
+				if(!vd.isCheck()){
+					vd.setMeanVar((vd.getMeanVar() - minMean)/(maxMean - minMean));
+					
+					System.out.println("VID: "+vd.getVarietyId() + " NORAVGMEAN: "+vd.getMeanVar());
 				}
 			}
 		}
@@ -475,7 +564,7 @@ class VarietyDetail {
 	private String _type; //conv; RR1 ; RR2
 	private double _rm;
 	private double _rm_yield; // rm/0.1 * 0.6
-	private boolean _isCheckOrElite; //true is checked, false is elite
+	private boolean _isCheckOrElite; //true is checked, false is not checked
 	private boolean _isTestData; //if testdata, will do the calculation, and output
 	//below field is used for calculation
 	private double _totalscore;
@@ -517,9 +606,9 @@ class VarietyDetail {
 	public boolean isCheck(){
 		return this._isCheckOrElite;
 	}
-	public boolean isElite(){
-		return !this._isCheckOrElite;
-	}
+//	public boolean isElite(){
+//		return !this._isCheckOrElite;
+//	}
 	public boolean isTestData(){
 		return this._isTestData;
 	}
