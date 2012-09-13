@@ -1,3 +1,4 @@
+package org;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,24 +9,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-//
-//import org.Experiment;
-//import org.MinMaxValuePair;
-//import org.QuarterEnum;
-//import org.TrialMapKey;
-//import org.TrialMapValue;
-//import org.TrialTypeEnum;
-//import org.VarietyDetail;
-//import org.VarietyEliteScore;
-//import org.VarietyEliteScoreComparator;
-//import org.VarietyTypeEnum;
-//import org.WeightEnum;
 
 /**
  * TopCoder Soybean Oracle Series
  * Soybean Marathon Match 6
  * Chen Xianpeng (carl)
- * 2012/09/09 398877
+ * 2012/09/09  401111
  */
 
 /**
@@ -49,21 +38,35 @@ public class AdvancedEliteClassifier {
 		analyzeExperiments(experiments);
 		generateAverageScoreInExperiments(experiments);
 		generateMeanVarInExperiments(experiments);
-		String[] sortedTestId = getSortedEliteVariety(experiments);
+		String [] already = getAlreadyEliteVariety(experiments);
+		String[] sortedTestId = getSortedEliteVariety(experiments, already);
 		String[] checkedVariety = getCheckedVariety(experiments);
-		int[] ret = combineConvert(sortedTestId, checkedVariety);
+		int[] ret = combineConvert(already, sortedTestId, checkedVariety);
 		return ret;
 	}
 
-	private int[] combineConvert(String[] first, String[] second) {
-		int len = first.length + second.length;
-		int firstlen = first.length;
+	private int[] combineConvert(String[] already, String[] first, String[] second) {
+		if (already == null){
+			already = new String[0];
+		}
+		if(first == null){
+			first = new String[0];
+		}
+		if (second == null){
+			second = new String[0];
+		}
+		int len = first.length + second.length +already.length;
+		int alreadylen = already.length;
 		int[] ret = new int[len];
 		int i = 0;
-		for (i = 0; i < firstlen; i++) {
-			ret[i] = Integer.parseInt(first[i]);
+		for (i = 0; i < alreadylen; i++) {
+			ret[i] = Integer.parseInt(already[i]);
 		}
-		for (; i < len; i++) {
+		int firstlen = alreadylen + first.length;
+		for (; i < firstlen; i++) {
+			ret[i] = Integer.parseInt(first[i - alreadylen]);
+		}
+		for(; i< len; i++){
 			ret[i] = Integer.parseInt(second[i - firstlen]);
 		}
 		return ret;
@@ -100,7 +103,7 @@ public class AdvancedEliteClassifier {
 				String type = parseVarietyType(items[5]);
 				double rm = Double.parseDouble(items[8]);
 				boolean checked = parseBoolean(items[15]);
-				varietyDetail = new VarietyDetail(vid, type, rm, checked, true);
+				varietyDetail = new VarietyDetail(vid, type, rm, checked, false, true);
 				varieties.put(vid, varietyDetail);
 			}
 			// handle the trial
@@ -183,9 +186,15 @@ public class AdvancedEliteClassifier {
 				String type = parseVarietyType(items[5]);
 				double rm = Double.parseDouble(items[8]);
 				boolean checked2 = parseBoolean(items[15]);
-				varietyDetail = new VarietyDetail(vid, type, rm, checked2,
-						false);
+				boolean iselite = parseBoolean(items[16]);
+				boolean isTest = (Arrays.binarySearch(testID, vid) >= 0);
+				varietyDetail = new VarietyDetail(vid, type, rm, checked2, iselite,
+						isTest);
 				varieties.put(vid, varietyDetail);
+			}else{
+				boolean iselite = parseBoolean(items[16]);
+				varietyDetail = varieties.get(vid);
+				varietyDetail.setElite(iselite);
 			}
 			// handle the trial
 			String loccd = items[1];
@@ -326,12 +335,21 @@ public class AdvancedEliteClassifier {
 							VarietyTypeEnum.TYPE_RR1)) {
 						vd.setAverageScore(vd.getAverageScore()
 								* (1 + WeightEnum.TYPERR1WEIGHT));
-					} else if (vd.getType().equalsIgnoreCase(
-							VarietyTypeEnum.TYPE_RR2Y)) {
-						vd.setAverageScore(vd.getAverageScore()
-								* (1 + WeightEnum.TYPERR2YWEIGHT));
-					}
+					} 
 
+					if (vd.getRM() <= 0){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG3));
+					}else if(vd.getRM()>0 && vd.getRM()<=2){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG2));
+					}else if(vd.getRM()>2 && vd.getRM()<=4){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG1));
+					}else if(vd.getRM()>4 && vd.getRM()<=5){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG2));
+					}else if(vd.getRM()>5 && vd.getRM()<=7){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG1));
+					}else if(vd.getRM()>7 && vd.getRM()<=8){
+						vd.setAverageScore(vd.getAverageScore()*(1+WeightEnum.RMG2));
+					}
 				}
 			}
 		}
@@ -405,8 +423,30 @@ public class AdvancedEliteClassifier {
 			}
 		}
 	}
+	
+	private String[] getAlreadyEliteVariety(Map<String, Experiment> experiments){
+		List<String> retlist = new ArrayList<String>();
+		Collection<Experiment> allexp = experiments.values();
+		Iterator<Experiment> it = allexp.iterator();
+		while (it.hasNext()) {
+			Experiment exp = it.next();
+			Collection<VarietyDetail> allvd = exp.varietyInfoMap.values();
+			Iterator<VarietyDetail> vdit = allvd.iterator();
+			while (vdit.hasNext()) {
+				VarietyDetail vd = vdit.next();
+				if(!vd.isCheck()&& vd.isElite()&&vd.isTestData()&&!retlist.contains(vd.getVarietyId())){
+					retlist.add(vd.getVarietyId());
+				}
+			}
+		}
+		return retlist.toArray(new String[0]);
+	}
 
-	private String[] getSortedEliteVariety(Map<String, Experiment> experiments) {
+	private String[] getSortedEliteVariety(Map<String, Experiment> experiments, String[] already) {
+		if (already == null){
+			already = new String[0];
+		}
+		Arrays.sort(already);
 		Map<String, VarietyEliteScore> score = new HashMap<String, VarietyEliteScore>();
 		Collection<Experiment> allexp = experiments.values();
 		Iterator<Experiment> it = allexp.iterator();
@@ -416,7 +456,7 @@ public class AdvancedEliteClassifier {
 			Iterator<VarietyDetail> vdit = allvd.iterator();
 			while (vdit.hasNext()) {
 				VarietyDetail vd = vdit.next();
-				if (!vd.isCheck()) {
+				if (!vd.isCheck() && Arrays.binarySearch(already, vd.getVarietyId())<0) {
 					if (score.containsKey(vd.getVarietyId())) {
 						VarietyEliteScore ss = score.get(vd.getVarietyId());
 						ss.timer++;
@@ -439,7 +479,7 @@ public class AdvancedEliteClassifier {
 		}
 		Collection<VarietyEliteScore> scoreValues = score.values();
 		VarietyEliteScore[] scoreArray = scoreValues
-				.toArray(new VarietyEliteScore[1]);
+				.toArray(new VarietyEliteScore[0]);
 		Arrays.sort(scoreArray, new VarietyEliteScoreComparator());
 		List<String> retlist = new ArrayList<String>();
 		int len = scoreArray.length;
@@ -447,7 +487,7 @@ public class AdvancedEliteClassifier {
 			retlist.add(scoreArray[i].vid);
 
 		}
-		return retlist.toArray(new String[1]);
+		return retlist.toArray(new String[0]);
 	}
 
 	private String[] getCheckedVariety(Map<String, Experiment> experiments) {
@@ -467,7 +507,7 @@ public class AdvancedEliteClassifier {
 				}
 			}
 		}
-		return retlist.toArray(new String[1]);
+		return retlist.toArray(new String[0]);
 	}
 
 	private String parseVarietyType(String rawType) {
@@ -669,7 +709,8 @@ class VarietyDetail {
 	private String _type; // conv; RR1 ; RR2
 	private double _rm;
 	private double _rm_yield; // rm/0.1 * 0.6
-	private boolean _isCheckOrElite; // true is checked, false is not checked
+	private boolean _isCheck; // true is checked, false is not checked
+	private boolean _isElite;
 	private boolean _isTestData; // if testdata, will do the calculation, and
 									// output
 	// below field is used for calculation
@@ -680,13 +721,14 @@ class VarietyDetail {
 	private double _averyield; // will not consider type here
 	private double _meanVar; // used to determine yeild stable
 
-	public VarietyDetail(String id, String type, double rm, boolean checked,
+	public VarietyDetail(String id, String type, double rm, boolean checked, boolean iselite,
 			boolean test) {
 		this._varietyid = id;
 		this._type = type;
 		this._rm = rm;
 		this._rm_yield = this._rm * 6;
-		this._isCheckOrElite = checked;
+		this._isCheck = checked;
+		this._isElite = iselite;
 		this._isTestData = test;
 		this._totalscore = this._averscore = this._totalyield = this._averyield = this._meanVar = 0;
 		this._queryTime = 0;
@@ -717,7 +759,13 @@ class VarietyDetail {
 	}
 
 	public boolean isCheck() {
-		return this._isCheckOrElite;
+		return this._isCheck;
+	}
+	public boolean isElite() {
+		return this._isElite;
+	}
+	public void setElite(boolean val){
+		this._isElite = val;
 	}
 
 	// public boolean isElite(){
@@ -836,9 +884,12 @@ class WeightEnum {
 	public static double SAMEQUARTERWEIGHT = 0.01;
 	public static double TYPECONVWEIGHT = 0.02;
 	public static double TYPERR1WEIGHT = 0.03;
-	public static double TYPERR2YWEIGHT = 0.04;
+	//public static double TYPERR2YWEIGHT = 0.04;
 	// public static double ZERODOUBLEABS = 0.0000001;
-	public static double HIGHYIELDWIGHT = 0.7;
+	public static double HIGHYIELDWIGHT = 0.99;
+	public static double RMG1 = 0.01; //2.X - <4, 5.X - <7
+	public static double RMG2 = 0.02; //0.X - <2, 4.X - <5, 7.X - <8
+	public static double RMG3 = 0.04; // <0
 }
 
 class VarietyTypeEnum {
