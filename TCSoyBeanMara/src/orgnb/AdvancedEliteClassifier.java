@@ -4,13 +4,16 @@
 package orgnb;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 
 /**
@@ -47,8 +50,8 @@ public class AdvancedEliteClassifier {
 				attrRM,trainingList );
 		totalIsEliteTrainingLength = temp[0];
 		totalNotEliteTrainingLength = temp[1];
-		isElitePValue = totalIsEliteTrainingLength / totalTrainingLength;
-		notElitePValue = totalNotEliteTrainingLength / totalTrainingLength;
+		isElitePValue = (double)totalIsEliteTrainingLength / (double)totalTrainingLength;
+		notElitePValue = (double)totalNotEliteTrainingLength / (double)totalTrainingLength;
 		calculateAttrPValue(attrLocationZone, totalIsEliteTrainingLength,totalNotEliteTrainingLength );
 		calculateAttrPValue(attrLocationBand, totalIsEliteTrainingLength,totalNotEliteTrainingLength);
 		calculateAttrPValue(attrRep, totalIsEliteTrainingLength,totalNotEliteTrainingLength);
@@ -60,10 +63,197 @@ public class AdvancedEliteClassifier {
 		//now the training is done. we start to identity the test data
 		List<DataRecord> testList = fetchFromTestData(testData);
 		fillLocationInfo(testList, locationList);
-		
+		analyzeTestList(testList,attrLocationZone,attrLocationBand, attrRep, attrYear, attrType, attrYield,attrMN, attrRM, isElitePValue, notElitePValue );
+		String[] noncheck = getSortedVarietyList(testList);
+		String[] check = getCheckFromTest(testList);
+		return combineConvert(noncheck, check);
 	}
 	
-	private void analyzeTestList
+	private int[] combineConvert(String[] first, String[] second) {
+		
+		if(first == null){
+			first = new String[0];
+		}
+		if (second == null){
+			second = new String[0];
+		}
+		int len = first.length + second.length;
+		
+		int[] ret = new int[len];
+		int i = 0;
+		
+		int firstlen = first.length;
+		for (; i < firstlen; i++) {
+			ret[i] = Integer.parseInt(first[i ]);
+		}
+		for(; i< len; i++){
+			ret[i] = Integer.parseInt(second[i - firstlen]);
+		}
+		return ret;
+	}
+	
+	private String[] getCheckFromTest(List<DataRecord> testList){
+		List<String> retlist = new ArrayList<String>();
+		Iterator<DataRecord> it = testList.iterator();
+		while( it.hasNext()){
+			DataRecord dr = it.next();
+			if(dr.ischeck && !retlist.contains(dr.varietyid)){
+				retlist.add(dr.varietyid);
+			}
+		}
+		return retlist.toArray(new String[0]);
+	}
+	
+	private String[] getSortedVarietyList(List<DataRecord> testData){
+		Map<String, IdentityPValue> results = new HashMap<String, IdentityPValue>();
+		Map<String, Integer> varietyList = new HashMap<String, Integer>();
+		Iterator<DataRecord> it = testData.iterator();
+		while ( it.hasNext()){
+			DataRecord dr = it.next();
+			if (dr.ischeck){
+				continue;
+			}
+			if(results.containsKey(dr.varietyid)){
+				IdentityPValue ipv = results.get(dr.varietyid);
+				if(dr.iselite){
+					ipv.isEliteNumber++;
+				}else{
+					ipv.notEliteNumber++;
+				}
+			}else{
+				IdentityPValue ipv = new IdentityPValue();
+				ipv.identity = dr.varietyid;
+				if(dr.iselite){
+					ipv.isEliteNumber = 1;
+					ipv.notEliteNumber = 0;
+				}else{
+					ipv.notEliteNumber = 1;
+					ipv.isEliteNumber = 0;
+				}
+				results.put(dr.varietyid,ipv);
+			}
+			if(varietyList.containsKey(dr.varietyid)){
+				Integer inte = varietyList.get(dr.varietyid);
+				Integer newone = inte.intValue() + 1;
+				varietyList.put(dr.varietyid, newone);
+			}else{
+				varietyList.put(dr.varietyid, new Integer(1));
+			}
+		}
+		
+		Collection<IdentityPValue> allVID = results.values();
+		Iterator<IdentityPValue> vit = allVID.iterator();
+		while( vit.hasNext()){
+			IdentityPValue ipv = vit.next();
+			int total = varietyList.get(ipv.identity).intValue();
+			ipv.isElitePValue = (double)ipv.isEliteNumber / (double)total;
+			ipv.notElitePValue = (double)ipv.notEliteNumber / (double)total;
+		}
+		
+		List<IdentityPValue> isEliteList = new ArrayList<IdentityPValue>();
+		List<IdentityPValue> notEliteList = new ArrayList<IdentityPValue>();
+		Iterator<IdentityPValue> vit2 = allVID.iterator();
+		while( vit2.hasNext()){
+			IdentityPValue ipv = vit2.next();
+			if (ipv.isElitePValue >= ipv.notElitePValue){
+				isEliteList.add(ipv);
+			}else{
+				notEliteList.add(ipv);
+			}
+		}
+		
+		//ok. sort it and return
+		String[] noncheck = sortCombine(isEliteList, notEliteList);
+		return noncheck;
+	}
+	
+	
+	
+	private String[] sortCombine(List<IdentityPValue> isEliteList,List<IdentityPValue> notEliteList ){
+		IdentityPValue [] isEliteArr = isEliteList.toArray(new IdentityPValue[0]);
+		Arrays.sort(isEliteArr, new IsElitePValueComparator());
+		String[] iselite =  getStringArr(isEliteArr);
+		IdentityPValue [] notEliteArr = notEliteList.toArray(new IdentityPValue[0]);
+		Arrays.sort(notEliteArr, new NotElitePValueComparator());
+		String[] notelite = getStringArr(notEliteArr);
+		return combineStr(iselite,notelite );
+	}
+	
+	private String[] combineStr(String[] a, String[]b){
+		int len = a.length + b.length;
+		String [] ret = new String[len];
+		int firstlen = a.length;
+		int i = 0;
+		for( i=0; i< firstlen;i++){
+			ret[i] = a[i];
+		}
+		for(; i<len; i++){
+			ret[i] = b[i - firstlen];
+		}
+		return ret;
+	}
+	
+	private String[] getStringArr(IdentityPValue [] ipvarr){
+		int len = ipvarr.length;
+		String [] ret = new String[len];
+		for(int i=0; i< len; i++){
+			ret[i] = ipvarr[i].identity;
+		}
+		return ret;
+	}
+	
+	private void analyzeTestList(List<DataRecord> testData, Map<String, IdentityPValue> attrLocationZone,Map<String, IdentityPValue> attrLocationBand, 
+			Map<String, IdentityPValue> attrRep, Map<String, IdentityPValue> attrYear,Map<String, IdentityPValue> attrType,Map<String, IdentityPValue> attrYield,
+			Map<String, IdentityPValue> attrMN,Map<String, IdentityPValue> attrRM, double isElitePValue, double notElitePValue)
+	{
+		Iterator<DataRecord> it = testData.iterator();
+		while ( it.hasNext()){
+			DataRecord dr = it.next();
+			if(dr.ischeck){
+				continue;
+			}
+			Map<Boolean, Double> results = new HashMap<Boolean, Double>();
+			results.put(Boolean.TRUE, (double) 0);
+			results.put(Boolean.FALSE,(double) 0);
+			Set<Boolean> keys = results.keySet();
+			Iterator<Boolean> itkey = keys.iterator();
+			while(itkey.hasNext()){
+				Boolean result = itkey.next();
+				double zonePValue = getAttrPValue(attrLocationZone, String.valueOf(dr.locationZone), result.booleanValue());
+				double bandPValue = getAttrPValue(attrLocationBand, String.valueOf(dr.locationBand), result.booleanValue());
+				double repPValue = getAttrPValue(attrRep, String.valueOf(dr.rep), result.booleanValue());
+				double yearPValue = getAttrPValue(attrYear, String.valueOf(dr.plantyear), result.booleanValue());
+				double typePValue = getAttrPValue(attrType, String.valueOf(dr.type), result.booleanValue());
+				double yieldPValue = getAttrPValue(attrYield, String.valueOf(dr.yieldIdentity), result.booleanValue());
+				double mnPValue = getAttrPValue(attrMN, String.valueOf(dr.mn), result.booleanValue());
+				double rmPValue = getAttrPValue(attrRM, String.valueOf(dr.rmIdentity), result.booleanValue());
+				double pv = zonePValue * bandPValue * repPValue * yearPValue * typePValue * yieldPValue * mnPValue * rmPValue;
+				if (result.booleanValue()){
+					pv = pv * isElitePValue;
+				}else{
+					pv = pv * notElitePValue;
+				}
+				results.put(result, pv);
+			}
+			if(results.get(Boolean.TRUE).doubleValue() >= results.get(Boolean.FALSE).doubleValue()){
+				dr.iselite = true;
+			}else{
+				dr.iselite = false;
+			}
+		}
+			
+	}
+	private double getAttrPValue(Map<String, IdentityPValue> attr, String identity, boolean iselite){
+		if (attr.containsKey(identity)){
+			if(iselite){
+				return attr.get(identity).isElitePValue;
+			}else{
+				return attr.get(identity).notElitePValue;
+			}
+		}else{
+			return 0;//for new identity from test, use 0;
+		}
+	}
 	
 	private List<DataRecord> fetchFromTestData(String[] testdata){
 		List<DataRecord> retlist = new ArrayList<DataRecord>();
@@ -106,8 +296,8 @@ public class AdvancedEliteClassifier {
 		Iterator<IdentityPValue> it = ipvs.iterator();
 		while( it.hasNext()){
 			IdentityPValue ipv = it.next();
-			ipv.isElitePValue = ipv.isEliteNumber / isEliteNumber;
-			ipv.notElitePValue = ipv.notEliteNumber / notEliteNumber;
+			ipv.isElitePValue = (double)ipv.isEliteNumber / (double)isEliteNumber;
+			ipv.notElitePValue = (double)ipv.notEliteNumber / (double)notEliteNumber;
 		}
 	}
 	
@@ -357,4 +547,26 @@ class LocationDetail {
 	public String year;
 	public String zone;
 	public String band;
+}
+class IsElitePValueComparator implements Comparator<IdentityPValue> {
+	public int compare(IdentityPValue o1, IdentityPValue o2) {
+		if (o1.isElitePValue > o2.isElitePValue) {
+			return -1;
+		} else if (o1.isElitePValue < o2.isElitePValue) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+}
+class NotElitePValueComparator implements Comparator<IdentityPValue> {
+	public int compare(IdentityPValue o1, IdentityPValue o2) {
+		if (o1.notElitePValue > o2.notElitePValue) {
+			return 1;
+		} else if (o1.notElitePValue < o2.notElitePValue) {
+			return -1;
+		} else {
+			return 0;
+		}
+	}
 }
