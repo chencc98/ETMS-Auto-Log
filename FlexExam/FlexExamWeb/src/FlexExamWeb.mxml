@@ -4,13 +4,26 @@
         xmlns:control="control.*"
         xmlns:view="ui.*"
         xmlns:business="business.*"
-        layout="vertical">
+        layout="vertical" creationComplete="test11()">
 
-
+    <mx:Script>
+        <![CDATA[
+            private function test11():void{
+                var obj:Object = new Object();
+                obj["test"] = "你";
+                test.request = obj;
+                test.send();
+            }
+        ]]>
+    </mx:Script>
     
     <business:Services id="services" />
     <control:ExamController id="examController" />
     <view:MainPanel />
 
+
+    <mx:HTTPService id="test">
+        
+    </mx:HTTPService>
 
 </mx:Application>

@@ -21,6 +21,12 @@
                 //valign.selectedLabel = demo.getStyle("verticalAlign");
                 inputtext.text = demo.labelText;
                 demowidth.text = demo.width.toString();
+                
+                var obj:Object = new Object();
+                obj["wd"] = "我还";
+                test.request = obj;
+                test.url = "http://www.baidu.com/s";
+                test.send();
             }
             
             
@@ -47,6 +53,9 @@
             
         ]]>
     </mx:Script>
+    <mx:HTTPService id="test">
+        
+    </mx:HTTPService>
     <mx:Array id="comboData">
         <mx:String>top</mx:String>
         <mx:String>middle</mx:String>
